@@ -1,0 +1,129 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+
+enum SemesterEnum {
+  FIRST
+  SECOND
+}
+
+model User {
+  userID      String       @id @default(uuid())
+  firstName   String    @db.VarChar(25)
+  middleName  String?   @db.VarChar(25)
+  lastName    String    @db.VarChar(25)
+  emails      Email[]
+  passwords   Password[]
+  resetTokens ResetToken[]
+}
+
+model Email {
+  emailID String    @id @default(uuid())
+  userID  String    @unique
+  email   String @unique @db.VarChar(50)
+  user    User   @relation(fields: [userID], references: [userID])
+}
+
+model Password {
+  passwordID String    @id @default(uuid())
+  userID     String    @unique
+  password   String @db.VarChar(80)
+  user       User   @relation(fields: [userID], references: [userID])
+}
+
+model ResetToken {
+  resetTokenID       String      @id @default(uuid())
+  userID             String      @unique
+  resetToken         String?  @db.VarChar(191)
+  resetTokenExpires  DateTime?
+  user               User     @relation(fields: [userID], references: [userID])
+}
+
+model Faculty {
+  facultyID      String   @id @default(uuid())
+  employeeNumber String?  @unique
+  firstName      String
+  middleName     String?
+  lastName       String
+  courseProgramID String
+  rankID         String?
+  CourseProgram CourseProgram @relation(fields: [courseProgramID], references: [courseProgramID])
+  rank           Rank?       @relation(fields: [rankID], references: [rankID])
+  schedules      Schedule[]
+}
+
+
+model Rank {
+  rankID   String   @id @default(uuid())
+  rankName String
+  faculties Faculty[]
+}
+
+model Room {
+  roomID    String  @id @default(uuid())
+  roomNumber String @unique
+  type      String
+  schedules Schedule[]
+}
+
+model CourseProgram {
+  courseProgramID String   @id @default(uuid())
+  courseCode      String @unique
+  courseProgram   String @unique
+  sections        Section[]
+  faculties       Faculty[]
+}
+
+model Section {
+  sectionID       String  @id @default(uuid())
+  sectionName     String @unique
+  courseProgramID String
+  courseProgram   CourseProgram @relation(fields: [courseProgramID], references: [courseProgramID])
+  schedules       Schedule[]
+}
+
+model Subject {
+  subjectID     String  @id @default(uuid())
+  subjectName   String @unique
+  subjectCode   String @unique
+  numberOfUnits Int
+  schedules     Schedule[]
+}
+
+model Schedule {
+  scheduleID     String @id @default(uuid())
+  facultyID      String
+  roomID         String
+  sectionID      String
+  subjectID      String
+  academicYearID String
+  semester      SemesterEnum
+  day            Int
+  timeStart      DateTime
+  timeEnd        DateTime
+
+  faculty      Faculty      @relation(fields: [facultyID], references: [facultyID])
+  room         Room         @relation(fields: [roomID], references: [roomID])
+  section      Section      @relation(fields: [sectionID], references: [sectionID])
+  subject      Subject      @relation(fields: [subjectID], references: [subjectID])
+  academicYear AcademicYear @relation(fields: [academicYearID], references: [academicYearID])
+}
+
+model AcademicYear {
+  academicYearID   String @id @default(uuid())
+  academicYearName String
+  schedules        Schedule[]
+}
+
