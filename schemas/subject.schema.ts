@@ -4,10 +4,10 @@ import { z } from "zod";
 // Define the form schema with validation
 export const subjectFormSchema = z.object({
   subjectName: z.string().min(1, { message: "Subject name is required" }),
-  subjectCode: z.string().min(1, { message: "Subject code is required" }),
+  // subjectCode: z.string().min(1, { message: "Subject code is required" }),
   // numberOfUnits: valueOfUnits,
   numberOfUnits: z
-    .string()
+    .number()
     .min(1, { message: "Number of units is required" })
     .refine((val) => !isNaN(Number(val)) && Number(val) > 0, {
       message: "Must be a positive number",

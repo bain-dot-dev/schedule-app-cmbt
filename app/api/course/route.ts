@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server"
+import { NextResponse } from "next/server";
 import { PrismaClient } from "@prisma/client";
 
 const prisma = new PrismaClient();
@@ -20,30 +20,80 @@ const prisma = new PrismaClient();
 
 export async function GET() {
   // Return all courses
-  const courses = await prisma.courseProgram.findMany()
-  return NextResponse.json(courses)
+  const courses = await prisma.courseProgram.findMany();
+  return NextResponse.json(courses);
 }
+
+// export async function POST(request: Request) {
+//   try {
+//     const data = await request.json();
+
+//     // Validate required fields
+//     if (!data.courseCode || !data.courseProgram) {
+//       return NextResponse.json(
+//         { error: "Missing required fields" },
+//         { status: 400 }
+//       );
+//     }
+
+//     // Check if course code already exists
+//     const existingCourse = await prisma.courseProgram.findUnique({
+//       where: { courseCode: data.courseCode },
+//     });
+
+//     if (existingCourse) {
+//       return NextResponse.json(
+//         { error: "Course code already exists" },
+//         { status: 400 }
+//       );
+//     }
+
+//     // Create a new course in the database
+//     const newCourse = await prisma.courseProgram.create({
+//       data: {
+//         courseCode: data.courseCode,
+//         courseProgram: data.courseProgram,
+//       },
+//     });
+
+//     return NextResponse.json(newCourse, { status: 201 });
+//   } catch (error) {
+//     console.error("Error creating course:", error);
+//     return NextResponse.json(
+//       { error: "Failed to create course" },
+//       { status: 500 }
+//     );
+//   }
+// }
 
 export async function POST(request: Request) {
   try {
     const data = await request.json();
 
-    // Validate required fields
-    if (!data.courseCode || !data.courseProgram) {
+    // Validate required field
+    if (!data.courseProgram) {
       return NextResponse.json(
-        { error: "Missing required fields" },
+        { error: "Missing required field: courseProgram" },
         { status: 400 }
       );
     }
 
-    // Check if course code already exists
+    const courseCode: string = data.courseProgram
+      .split(" ")
+      .map((word: string) => word.charAt(0).toUpperCase())
+      .join("");
+
+    // Check if the generated course code already exists
     const existingCourse = await prisma.courseProgram.findUnique({
-      where: { courseCode: data.courseCode },
+      where: { courseCode },
     });
 
     if (existingCourse) {
       return NextResponse.json(
-        { error: "Course code already exists" },
+        {
+          error:
+            "Generated course code already exists. Try renaming the course program.",
+        },
         { status: 400 }
       );
     }
@@ -51,7 +101,7 @@ export async function POST(request: Request) {
     // Create a new course in the database
     const newCourse = await prisma.courseProgram.create({
       data: {
-        courseCode: data.courseCode,
+        courseCode,
         courseProgram: data.courseProgram,
       },
     });
@@ -65,5 +115,3 @@ export async function POST(request: Request) {
     );
   }
 }
-
-

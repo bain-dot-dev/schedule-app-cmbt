@@ -1,53 +1,71 @@
 import { NextResponse } from "next/server"
+import { PrismaClient } from "@prisma/client"
 
-// Dummy data - replace with a database later
-let rooms = [
-  { id: "1", roomNumber: "101", type: "single" },
-  { id: "2", roomNumber: "102", type: "double" },
-  { id: "3", roomNumber: "201", type: "suite" },
-]
+const prisma = new PrismaClient()
 
+// GET a single room by ID
 export async function GET(request: Request, { params }: { params: { id: string } }) {
-  const id = params.id
-  const room = rooms.find((r) => r.id === id)
+  try {
+    const id = params.id
 
-  if (!room) {
-    return NextResponse.json({ error: "Room not found" }, { status: 404 })
+    const room = await prisma.room.findUnique({
+      where: { roomID: id },
+    })
+
+    if (!room) {
+      return NextResponse.json({ error: "Room not found" }, { status: 404 })
+    }
+
+    return NextResponse.json(room)
+  } catch (error) {
+    console.error("Error fetching room:", error)
+    return NextResponse.json({ error: "Failed to fetch room" }, { status: 500 })
   }
-
-  return NextResponse.json(room)
 }
 
+// PUT update a room
 export async function PUT(request: Request, { params }: { params: { id: string } }) {
   try {
     const id = params.id
     const data = await request.json()
+    const { roomNumber, type } = data
 
-    // Find the room
-    const index = rooms.findIndex((r) => r.id === id)
+    // Validate required fields
+    if (!roomNumber || !type) {
+      return NextResponse.json({ error: "Room number and type are required" }, { status: 400 })
+    }
 
-    if (index === -1) {
+    // Check if room exists
+    const room = await prisma.room.findUnique({
+      where: {roomID: id },
+    })
+
+    if (!room) {
       return NextResponse.json({ error: "Room not found" }, { status: 404 })
     }
 
-    // Validate required fields
-    if (!data.roomNumber || !data.type) {
-      return NextResponse.json({ error: "Missing required fields" }, { status: 400 })
+    // Check if another room with the same number exists
+    if (roomNumber !== room.roomNumber) {
+      const existingRoom = await prisma.room.findFirst({
+        where: {
+          roomNumber,
+          roomID: { not: id },
+        },
+      })
+
+      if (existingRoom) {
+        return NextResponse.json({ error: "Another room with this number already exists" }, { status: 400 })
+      }
     }
 
-    // Check if the new room number already exists (excluding current room)
-    if (rooms.some((room) => room.roomNumber === data.roomNumber && room.id !== id)) {
-      return NextResponse.json({ error: "Room number already exists" }, { status: 400 })
-    }
-
-    // Update the room
-    const updatedRoom = {
-      ...rooms[index],
-      roomNumber: data.roomNumber,
-      type: data.type,
-    }
-
-    rooms[index] = updatedRoom
+    // Update room
+    const updatedRoom = await prisma.room.update({
+      where: { roomID: id },
+      data: {
+        roomNumber,
+        type,
+      },
+    })
 
     return NextResponse.json(updatedRoom)
   } catch (error) {
@@ -56,19 +74,29 @@ export async function PUT(request: Request, { params }: { params: { id: string }
   }
 }
 
-export async function DELETE(request: Request, { params }: { params: { id: string } }) {
-  const id = params.id
+// DELETE a room
+// export async function DELETE(request: Request, { params }: { params: { id: string } }) {
+//   try {
+//     const id = params.id
 
-  // Find the room
-  const index = rooms.findIndex((r) => r.id === id)
+//     // Check if room exists
+//     const room = await prisma.room.findUnique({
+//       where: { id },
+//     })
 
-  if (index === -1) {
-    return NextResponse.json({ error: "Room not found" }, { status: 404 })
-  }
+//     if (!room) {
+//       return NextResponse.json({ error: "Room not found" }, { status: 404 })
+//     }
 
-  // Remove the room
-  rooms = rooms.filter((r) => r.id !== id)
+//     // Delete room
+//     await prisma.room.delete({
+//       where: { id },
+//     })
 
-  return NextResponse.json({ success: true })
-}
+//     return NextResponse.json({ success: true })
+//   } catch (error) {
+//     console.error("Error deleting room:", error)
+//     return NextResponse.json({ error: "Failed to delete room" }, { status: 500 })
+//   }
+// }
 

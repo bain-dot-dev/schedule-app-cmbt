@@ -35,7 +35,7 @@ interface Subject {
   subjectID: string;
   subjectName: string;
   subjectCode: string;
-  numberOfUnits: string;
+  numberOfUnits: number;
 }
 
 // This would typically come from your database

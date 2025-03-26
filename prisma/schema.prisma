@@ -82,16 +82,23 @@ model CourseProgram {
   courseProgramID String   @id @default(uuid())
   courseCode      String @unique
   courseProgram   String @unique
-  sections        Section[]
   faculties       Faculty[]
+  sectionCourses  SectionCourse[]
 }
 
 model Section {
   sectionID       String  @id @default(uuid())
   sectionName     String @unique
-  courseProgramID String
-  courseProgram   CourseProgram @relation(fields: [courseProgramID], references: [courseProgramID])
   schedules       Schedule[]
+  sectionCourses  SectionCourse[]
+}
+
+model SectionCourse {
+  SectionCourseID String @id @default(uuid())
+  sectionID       String
+  courseProgramID String
+  section         Section @relation(fields: [sectionID], references: [sectionID])
+  courseProgram   CourseProgram @relation(fields: [courseProgramID], references: [courseProgramID])
 }
 
 model Subject {
@@ -123,7 +130,7 @@ model Schedule {
 
 model AcademicYear {
   academicYearID   String @id @default(uuid())
-  academicYearName String
+  academicYearName String @unique
   schedules        Schedule[]
 }
 

@@ -45,7 +45,7 @@ interface CourseModalProps {
   onClose: () => void;
   course?: {
     courseProgramID?: string;
-    courseCode: string;
+    // courseCode: string;
     courseProgram: string;
   } | null;
 }
@@ -58,7 +58,7 @@ export function CourseModal({ isOpen, onClose, course }: CourseModalProps) {
   const form = useForm<CourseFormValues>({
     resolver: zodResolver(courseFormSchema),
     defaultValues: {
-      courseCode: "",
+      // courseCode: "",
       courseProgram: "",
     },
   });
@@ -67,12 +67,12 @@ export function CourseModal({ isOpen, onClose, course }: CourseModalProps) {
   useEffect(() => {
     if (course) {
       form.reset({
-        courseCode: course.courseCode || "",
+        // courseCode: course.courseCode || "",
         courseProgram: course.courseProgram || "",
       });
     } else {
       form.reset({
-        courseCode: "",
+        // courseCode: "",
         courseProgram: "",
       });
     }
@@ -153,8 +153,8 @@ export function CourseModal({ isOpen, onClose, course }: CourseModalProps) {
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
-              <FormField
+            <div className="grid grid-cols-1 gap-4">
+              {/* <FormField
                 control={form.control}
                 name="courseCode"
                 render={({ field }) => (
@@ -166,7 +166,7 @@ export function CourseModal({ isOpen, onClose, course }: CourseModalProps) {
                     <FormMessage />
                   </FormItem>
                 )}
-              />
+              /> */}
 
               {/* <FormField
                 control={form.control}

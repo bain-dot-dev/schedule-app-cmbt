@@ -24,7 +24,7 @@ import {
 import { RoomModal } from "@/components/room/room-modal";
 
 interface Room {
-  id: string;
+  roomID: string;
   roomNumber: string;
   type: string;
 }
@@ -124,7 +124,7 @@ export default function RoomPage() {
                 </TableHeader>
                 <TableBody>
                   {rooms.map((room) => (
-                    <TableRow key={room.id}>
+                    <TableRow key={room.roomID}>
                       <TableCell>{room.roomNumber}</TableCell>
                       <TableCell>{room.type}</TableCell>
                       <TableCell>

@@ -26,42 +26,94 @@ export async function GET() {
   return NextResponse.json(subjects);
 }
 
+// export async function POST(request: Request) {
+//   try {
+//     const data = await request.json();
+//     console.log("Request Body:", request.body);
+//     console.log(data);
+
+//     // Validate required fields
+//     if (!data.subjectName || !data.subjectCode || isNaN(data.numberOfUnits)) {
+//       return NextResponse.json(
+//         { error: "Missing required fields" },
+//         { status: 400 }
+//       );
+//     }
+
+//     // Check if subject name or subject code already exists
+//     const existingSubject = await prisma.subject.findFirst({
+//       where: {
+//         OR: [
+//           { subjectCode: data.subjectCode },
+//           { subjectName: data.subjectName },
+//         ],
+//       },
+//     });
+
+//     if (existingSubject) {
+//       return NextResponse.json(
+//         { error: "Subject name or subject code already exists" },
+//         { status: 400 }
+//       );
+//     }
+
+//     // Create a new subject in the database
+//     const newSubject = await prisma.subject.create({
+//       data: {
+//         subjectName: data.subjectName,
+//         subjectCode: data.subjectCode,
+//         numberOfUnits: data.numberOfUnits,
+//       },
+//     });
+
+//     return NextResponse.json(newSubject, { status: 201 });
+//   } catch (error) {
+//     console.error("Error creating subject:", error);
+//     return NextResponse.json(
+//       { error: "Failed to create subject" },
+//       { status: 500 }
+//     );
+//   }
+// }
+
 export async function POST(request: Request) {
   try {
     const data = await request.json();
-    console.log("Request Body:", request.body);
-    console.log(data);
+    console.log("Request Body:", data);
 
     // Validate required fields
-    if (!data.subjectName || !data.subjectCode || isNaN(data.numberOfUnits)) {
+    if (!data.subjectName || isNaN(data.numberOfUnits)) {
       return NextResponse.json(
         { error: "Missing required fields" },
         { status: 400 }
       );
     }
 
-    // Check if subject name or subject code already exists
-    const existingSubject = await prisma.subject.findFirst({
-      where: {
-        OR: [
-          { subjectCode: data.subjectCode },
-          { subjectName: data.subjectName },
-        ],
-      },
+    // Generate subject code from subject name
+    let subjectCode = data.subjectName
+      .split(" ")
+      .map((word: string) => word.charAt(0).toUpperCase())
+      .join("");
+
+    // Check if subject code already exists and append a number if needed
+    let existingSubject = await prisma.subject.findFirst({
+      where: { subjectCode },
     });
 
-    if (existingSubject) {
-      return NextResponse.json(
-        { error: "Subject name or subject code already exists" },
-        { status: 400 }
-      );
+    let counter = 1;
+    while (existingSubject) {
+      subjectCode = subjectCode + counter;
+      existingSubject = await prisma.subject.findFirst({
+        where: { subjectCode },
+      });
+      counter++;
     }
 
     // Create a new subject in the database
     const newSubject = await prisma.subject.create({
       data: {
         subjectName: data.subjectName,
-        subjectCode: data.subjectCode,
+        subjectCode,
         numberOfUnits: data.numberOfUnits,
       },
     });

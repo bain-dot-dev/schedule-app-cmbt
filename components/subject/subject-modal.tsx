@@ -46,8 +46,8 @@ interface SubjectModalProps {
   subject?: {
     subjectID?: string;
     subjectName: string;
-    subjectCode: string;
-    numberOfUnits: string;
+    // subjectCode: string;
+    numberOfUnits: number;
   } | null;
 }
 
@@ -60,8 +60,8 @@ export function SubjectModal({ isOpen, onClose, subject }: SubjectModalProps) {
     resolver: zodResolver(subjectFormSchema),
     defaultValues: {
       subjectName: "",
-      subjectCode: "",
-      numberOfUnits: "",
+      // subjectCode: "",
+      numberOfUnits: 0,
     },
   });
 
@@ -70,14 +70,14 @@ export function SubjectModal({ isOpen, onClose, subject }: SubjectModalProps) {
     if (subject) {
       form.reset({
         subjectName: subject.subjectName || "",
-        subjectCode: subject.subjectCode || "",
-        numberOfUnits: subject.numberOfUnits || "",
+        // subjectCode: subject.subjectCode || "",
+        numberOfUnits: subject.numberOfUnits || 0,
       });
     } else {
       form.reset({
         subjectName: "",
-        subjectCode: "",
-        numberOfUnits: "",
+        // subjectCode: "",
+        numberOfUnits: 0,
       });
     }
   }, [subject, form]);
@@ -142,7 +142,6 @@ export function SubjectModal({ isOpen, onClose, subject }: SubjectModalProps) {
       // Convert numberOfUnits to a number before sending
       const formattedData = {
         ...data,
-        numberOfUnits: Number(data.numberOfUnits),
       };
 
       if (isEditMode && subject?.subjectID) {
@@ -217,22 +216,21 @@ export function SubjectModal({ isOpen, onClose, subject }: SubjectModalProps) {
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            <FormField
-              control={form.control}
-              name="subjectName"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Subject name</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Subject name" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
             <div className="grid grid-cols-2 gap-4">
               <FormField
+                control={form.control}
+                name="subjectName"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Subject name</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Subject name" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              {/* <FormField
                 control={form.control}
                 name="subjectCode"
                 render={({ field }) => (
@@ -244,7 +242,7 @@ export function SubjectModal({ isOpen, onClose, subject }: SubjectModalProps) {
                     <FormMessage />
                   </FormItem>
                 )}
-              />
+              /> */}
 
               <FormField
                 control={form.control}

@@ -23,18 +23,33 @@ import {
 } from "@/components/ui/pagination";
 import { SectionModal } from "@/components/section/section-modal";
 
-// Course programs mapping for display
-const courseProgramsMap = {
-  BSHM: "Hospitality Management",
-  BSIT: "Information Technology",
-  BSCS: "Computer Science",
-  BSA: "Accountancy",
-};
+interface CourseProgram {
+  courseProgramID: string
+  courseCode: string
+  courseProgram: string
+}
 
 interface Section {
-  id: string;
-  sectionName: string;
-  courseProgram: string;
+  sectionID: string
+  sectionName: string
+}
+
+interface SectionCourse {
+  SectionCourseID: string
+  sectionID: string
+  courseProgramID: string
+  section: Section
+  courseProgram: CourseProgram
+}
+
+// Combined interface for the UI
+interface SectionDisplay {
+  id: string // Using SectionCourseID as the primary id
+  sectionID: string
+  courseProgramID: string
+  sectionName: string
+  courseProgram: string
+  courseCode: string
 }
 
 // This would typically come from your database
@@ -47,26 +62,39 @@ interface Section {
 
 export default function SectionPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [selectedSection, setSelectedSection] = useState<Section | null>(null);
-  const [sections, setSections] = useState<Section[]>([]);
+  const [selectedSection, setSelectedSection] = useState<SectionDisplay | null>(null);
+  const [sections, setSections] = useState<SectionDisplay[]>([])
   const [isLoading, setIsLoading] = useState(true);
 
   // Fetch sections data
   const fetchSections = useCallback(async () => {
-    setIsLoading(true);
+    setIsLoading(true)
     try {
-      const response = await fetch("/api/section");
+      const response = await fetch("/api/section")
       if (!response.ok) {
-        throw new Error("Failed to fetch sections");
+        throw new Error("Failed to fetch sections")
       }
-      const data = await response.json();
-      setSections(data);
+      const data = await response.json()
+
+      // Map the API response to match our display interface
+      // The API should return SectionCourse records with their relations
+      const formattedSections = data.map((item: SectionCourse) => ({
+        id: item.SectionCourseID || item.SectionCourseID || `section-course-${item.sectionID}-${item.courseProgramID}`,
+        sectionID: item.sectionID || item.section?.sectionID || "",
+        courseProgramID: item.courseProgramID || item.courseProgram?.courseProgramID || "",
+        sectionName: item.section?.sectionName || item.section.sectionName || "",
+        courseProgram: item.courseProgram?.courseProgram || item.courseProgram || "",
+        courseCode: item.courseProgram?.courseCode || item.courseProgram.courseCode || "",
+      }))
+
+      setSections(formattedSections)
+      console.log("Formatted sections:", formattedSections)
     } catch (error) {
-      console.error("Error fetching sections:", error);
+      console.error("Error fetching sections:", error)
     } finally {
-      setIsLoading(false);
+      setIsLoading(false)
     }
-  }, []);
+  }, [])
 
   // Load sections data on component mount
   useEffect(() => {
@@ -80,7 +108,7 @@ export default function SectionPage() {
   };
 
   // Open modal for editing an existing section
-  const handleEditSection = (section: Section) => {
+  const handleEditSection = (section: SectionDisplay) => {
     setSelectedSection(section);
     setIsModalOpen(true);
   };
@@ -132,15 +160,9 @@ export default function SectionPage() {
                 </TableHeader>
                 <TableBody>
                   {sections.map((section) => (
-                    <TableRow key={section.id}>
+                    <TableRow key={section.sectionID}>
                       <TableCell>{section.sectionName}</TableCell>
-                      <TableCell>
-                        {
-                          courseProgramsMap[
-                            section.courseProgram as keyof typeof courseProgramsMap
-                          ]
-                        }
-                      </TableCell>
+                      <TableCell>{section.courseProgram}</TableCell>
                       <TableCell>
                         <div className="flex justify-center gap-2">
                           <Button variant="outline" size="icon">

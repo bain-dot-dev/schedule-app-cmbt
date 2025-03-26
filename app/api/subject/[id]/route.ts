@@ -42,7 +42,7 @@ export async function PUT(
     const data = await request.json();
 
     // Validate required fields
-    if (!data.subjectName || !data.subjectCode || !data.numberOfUnits) {
+    if (!data.subjectName || !data.numberOfUnits) {
       return NextResponse.json(
         { error: "Missing required fields" },
         { status: 400 }
@@ -58,6 +58,12 @@ export async function PUT(
     //   );
     // }
 
+    // Generate subject code from subject name
+    const subjectCode = data.subjectName
+      .split(" ")
+      .map((word: string) => word.charAt(0).toUpperCase())
+      .join("");
+
     // Check if the subject exists
     const existingSubject = await prisma.subject.findUnique({
       where: { subjectID: id },
@@ -70,7 +76,7 @@ export async function PUT(
     // Check if the new subject code already exists (excluding current subject)
     const duplicateSubject = await prisma.subject.findFirst({
       where: {
-        subjectCode: data.subjectCode,
+        subjectCode: subjectCode,
         NOT: { subjectID: id },
       },
     });
@@ -87,7 +93,7 @@ export async function PUT(
       where: { subjectID: id },
       data: {
         subjectName: data.subjectName,
-        subjectCode: data.subjectCode,
+        subjectCode,
         numberOfUnits: data.numberOfUnits,
       },
     });

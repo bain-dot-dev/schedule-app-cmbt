@@ -43,14 +43,14 @@ interface RoomModalProps {
   isOpen: boolean;
   onClose: () => void;
   room?: {
-    id?: string;
+    roomID?: string;
     roomNumber: string;
     type: string;
   } | null;
 }
 
 export function RoomModal({ isOpen, onClose, room }: RoomModalProps) {
-  const isEditMode = !!room?.id;
+  const isEditMode = !!room?.roomID;
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Initialize the form with react-hook-form
@@ -81,9 +81,9 @@ export function RoomModal({ isOpen, onClose, room }: RoomModalProps) {
   const onSubmit = async (data: RoomFormValues) => {
     setIsSubmitting(true);
     try {
-      if (isEditMode && room?.id) {
+      if (isEditMode && room?.roomID) {
         // PUT request to update existing room
-        const response = await fetch(`/api/room/${room.id}`, {
+        const response = await fetch(`/api/room/${room.roomID}`, {
           method: "PUT",
           headers: {
             "Content-Type": "application/json",

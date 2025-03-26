@@ -29,22 +29,34 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { SectionFormValues, sectionFormSchema } from "@/schemas/section.schema";
+import {
+  type SectionFormValues,
+  sectionFormSchema,
+} from "@/schemas/section.schema";
 
 interface SectionModalProps {
   isOpen: boolean;
   onClose: () => void;
   section?: {
     id?: string;
+    sectionID?: string;
+    courseProgramID?: string;
     sectionName: string;
     courseProgram: string;
+    courseCode?: string;
   } | null;
 }
 
+interface Course {
+  courseProgramID: string;
+  courseCode: string;
+  courseProgram: string;
+}
+
 export function SectionModal({ isOpen, onClose, section }: SectionModalProps) {
-  const isEditMode = !!section?.id;
+  const isEditMode = !!section?.id || !!section?.sectionID;
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [courses, setCourses] = useState<{ id: string; code: string }[]>([]);
+  const [courses, setCourses] = useState<Course[]>([]);
 
   // Fetch courses data
   const fetchCourses = useCallback(async () => {
@@ -61,8 +73,10 @@ export function SectionModal({ isOpen, onClose, section }: SectionModalProps) {
   }, []);
 
   useEffect(() => {
-    fetchCourses();
-  }, [fetchCourses]);
+    if (isOpen) {
+      fetchCourses();
+    }
+  }, [fetchCourses, isOpen]);
 
   // Initialize the form with react-hook-form
   const form = useForm<SectionFormValues>({
@@ -76,9 +90,16 @@ export function SectionModal({ isOpen, onClose, section }: SectionModalProps) {
   // Update form values when section data changes (for edit mode)
   useEffect(() => {
     if (section) {
+      // For edit mode, find the course program ID that matches the course program name
+      const courseProgram =
+        section.courseProgramID ||
+        courses.find((c) => c.courseProgram === section.courseProgram)
+          ?.courseProgramID ||
+        "";
+
       form.reset({
         sectionName: section.sectionName || "",
-        courseProgram: section.courseProgram || "",
+        courseProgram: courseProgram,
       });
     } else {
       form.reset({
@@ -86,24 +107,43 @@ export function SectionModal({ isOpen, onClose, section }: SectionModalProps) {
         courseProgram: "",
       });
     }
-  }, [section, form]);
+  }, [section, form, courses]);
 
   // Handle form submission
   const onSubmit = async (data: SectionFormValues) => {
     setIsSubmitting(true);
     try {
-      if (isEditMode && section?.id) {
+      // Find the selected course to get the courseProgram value
+      const selectedCourse = courses.find(
+        (course) => course.courseProgramID === data.courseProgram
+      );
+
+      if (!selectedCourse) {
+        throw new Error("Selected course not found");
+      }
+
+      // Prepare the data for API submission
+      const apiData = {
+        sectionName: data.sectionName,
+        courseProgram: selectedCourse.courseProgram, // Send courseProgram instead of courseProgramID
+      };
+
+      // Determine the correct ID to use for the API call
+      const sectionId = section?.sectionID || section?.id;
+
+      if (isEditMode && sectionId) {
         // PUT request to update existing section
-        const response = await fetch(`/api/section/${section.id}`, {
+        const response = await fetch(`/api/section/${sectionId}`, {
           method: "PUT",
           headers: {
             "Content-Type": "application/json",
           },
-          body: JSON.stringify(data),
+          body: JSON.stringify(apiData),
         });
 
         if (!response.ok) {
-          throw new Error("Failed to update section");
+          const errorData = await response.json();
+          throw new Error(errorData.error || "Failed to update section");
         }
 
         toast.success("Section updated", {
@@ -116,11 +156,12 @@ export function SectionModal({ isOpen, onClose, section }: SectionModalProps) {
           headers: {
             "Content-Type": "application/json",
           },
-          body: JSON.stringify(data),
+          body: JSON.stringify(apiData),
         });
 
         if (!response.ok) {
-          throw new Error("Failed to add section");
+          const errorData = await response.json();
+          throw new Error(errorData.error || "Failed to add section");
         }
 
         toast.success("Section added", {
@@ -140,6 +181,11 @@ export function SectionModal({ isOpen, onClose, section }: SectionModalProps) {
     } finally {
       setIsSubmitting(false);
     }
+  };
+
+  // Handle form clearing
+  const handleClear = () => {
+    form.reset();
   };
 
   return (
@@ -196,9 +242,12 @@ export function SectionModal({ isOpen, onClose, section }: SectionModalProps) {
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        {courses.map((program) => (
-                          <SelectItem key={program.id} value={program.id}>
-                            {program.code}
+                        {courses.map((course) => (
+                          <SelectItem
+                            key={`course-${course.courseProgramID}`}
+                            value={course.courseProgramID}
+                          >
+                            {course.courseProgram}
                           </SelectItem>
                         ))}
                       </SelectContent>
@@ -213,7 +262,7 @@ export function SectionModal({ isOpen, onClose, section }: SectionModalProps) {
               <Button
                 type="button"
                 variant="outline"
-                onClick={() => form.reset()}
+                onClick={handleClear}
                 disabled={isSubmitting}
               >
                 Clear
