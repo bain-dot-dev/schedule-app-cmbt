@@ -35,45 +35,116 @@ interface Subject {
   subjectID: string;
   subjectName: string;
   subjectCode: string;
-  numberOfUnits: number;
+  numberOfUnits: string;
 }
 
-// This would typically come from your database
-// const subjectData = [
-//   {
-//     subjectName: "Hospitality Management Physical Education",
-//     subjectCode: "HM",
-//     numberOfUnits: "3",
-//   },
-// ];
+interface PaginationMeta {
+  totalItems: number;
+  itemsPerPage: number;
+  totalPages: number;
+  currentPage: number;
+}
 
 export default function SectionPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedSubject, setSelectedSubject] = useState<Subject | null>(null);
   const [subjects, setSubjects] = useState<Subject[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState("");
 
-  // Fetch subjects data
-  const fetchSubjects = useCallback(async () => {
-    setIsLoading(true);
-    try {
-      const response = await fetch("/api/subject");
-      if (!response.ok) {
-        throw new Error("Failed to fetch subjects");
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage] = useState(10); // You can make this adjustable if needed
+  const [paginationMeta, setPaginationMeta] = useState<PaginationMeta>({
+    totalItems: 0,
+    itemsPerPage: itemsPerPage,
+    totalPages: 1,
+    currentPage: 1,
+  });
+
+  // Fetch subjects data with pagination
+  const fetchSubjects = useCallback(
+    async (page = 1) => {
+      setIsLoading(true);
+      try {
+        // Add pagination parameters to the API request
+        const response = await fetch(
+          `/api/subject?page=${page}&limit=${itemsPerPage}`
+        );
+
+        if (!response.ok) {
+          throw new Error("Failed to fetch subjects");
+        }
+
+        const data = await response.json();
+
+        // If your API returns paginated data in a specific format, adjust accordingly
+        // This assumes the API returns { data: Subject[], meta: PaginationMeta }
+        if (data.data && data.meta) {
+          setSubjects(data.data);
+          setPaginationMeta(data.meta);
+        } else {
+          // Fallback if API doesn't support pagination yet
+          setSubjects(data);
+
+          // Calculate pagination meta manually
+          const totalItems = data.length;
+          const totalPages = Math.ceil(totalItems / itemsPerPage);
+
+          // Get the current page of data
+          const startIndex = (page - 1) * itemsPerPage;
+          const endIndex = startIndex + itemsPerPage;
+          const paginatedData = data.slice(startIndex, endIndex);
+
+          setSubjects(paginatedData);
+          setPaginationMeta({
+            totalItems,
+            itemsPerPage,
+            totalPages,
+            currentPage: page,
+          });
+        }
+      } catch (error) {
+        console.error("Error fetching subjects:", error);
+      } finally {
+        setIsLoading(false);
       }
-      const data = await response.json();
-      setSubjects(data);
-    } catch (error) {
-      console.error("Error fetching subjects:", error);
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
+    },
+    [itemsPerPage]
+  );
 
-  // Load subjects data on component mount
+  // Load subjects data on component mount or when page changes
   useEffect(() => {
-    fetchSubjects();
-  }, [fetchSubjects]);
+    fetchSubjects(currentPage);
+  }, [fetchSubjects, currentPage]);
+
+  // Handle page change
+  const handlePageChange = (page: number) => {
+    if (page < 1 || page > paginationMeta.totalPages) return;
+    setCurrentPage(page);
+  };
+
+  // // Fetch subjects data
+  // const fetchSubjects = useCallback(async () => {
+  //   setIsLoading(true);
+  //   try {
+  //     const response = await fetch("/api/subject");
+  //     if (!response.ok) {
+  //       throw new Error("Failed to fetch subjects");
+  //     }
+  //     const data = await response.json();
+  //     setSubjects(data);
+  //   } catch (error) {
+  //     console.error("Error fetching subjects:", error);
+  //   } finally {
+  //     setIsLoading(false);
+  //   }
+  // }, []);
+
+  // // Load subjects data on component mount
+  // useEffect(() => {
+  //   fetchSubjects();
+  // }, [fetchSubjects]);
 
   // Open modal for adding a new subject
   const handleAddSubject = () => {
@@ -93,6 +164,58 @@ export default function SectionPage() {
     fetchSubjects(); // Refresh the data after modal closes
   };
 
+  // Handle search input change
+  const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchTerm(e.target.value);
+    // Reset to first page when searching
+    setCurrentPage(1);
+  };
+
+  // Filter subjects based on search term
+  const filteredSubjects = subjects.filter(
+    (subject) =>
+      subject.subjectName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      subject.subjectCode.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      subject.numberOfUnits.toString().includes(searchTerm)
+  );
+
+  // Generate page numbers for pagination
+  const getPageNumbers = () => {
+    const { totalPages, currentPage } = paginationMeta;
+    const pageNumbers = [];
+
+    // Always show first page
+    pageNumbers.push(1);
+
+    // Show ellipsis if needed
+    if (currentPage > 3) {
+      pageNumbers.push("ellipsis1");
+    }
+
+    // Show current page and surrounding pages
+    for (
+      let i = Math.max(2, currentPage - 1);
+      i <= Math.min(totalPages - 1, currentPage + 1);
+      i++
+    ) {
+      if (i !== 1 && i !== totalPages) {
+        pageNumbers.push(i);
+      }
+    }
+
+    // Show ellipsis if needed
+    if (currentPage < totalPages - 2) {
+      pageNumbers.push("ellipsis2");
+    }
+
+    // Always show last page if there's more than one page
+    if (totalPages > 1) {
+      pageNumbers.push(totalPages);
+    }
+
+    return pageNumbers;
+  };
+
   return (
     <div className="py-8">
       <div className="mb-8 flex items-center justify-between">
@@ -105,6 +228,8 @@ export default function SectionPage() {
             <Input
               placeholder="Search subject..."
               className="w-[230px] pl-10 pr-4"
+              value={searchTerm}
+              onChange={handleSearch}
             />
           </div>
           <Button onClick={handleAddSubject} className="gap-2">
@@ -119,7 +244,7 @@ export default function SectionPage() {
           <div className="flex justify-center py-8">Loading subjects...</div>
         ) : (
           <div className="grid gap-4">
-            {subjects.length === 0 ? (
+            {filteredSubjects.length === 0 ? (
               <div className="text-center py-8">
                 No subjects found. Add your first subject.
               </div>
@@ -134,7 +259,7 @@ export default function SectionPage() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {subjects.map((subject) => (
+                  {filteredSubjects.map((subject) => (
                     <TableRow key={subject.subjectID}>
                       <TableCell>{subject.subjectName}</TableCell>
                       <TableCell>{subject.subjectCode}</TableCell>
@@ -162,7 +287,57 @@ export default function SectionPage() {
         )}
       </div>
 
-      <Pagination className="mt-4">
+      {paginationMeta.totalPages > 1 && (
+        <Pagination className="mt-4">
+          <PaginationContent>
+            <PaginationItem>
+              <PaginationPrevious
+                onClick={() => handlePageChange(currentPage - 1)}
+                className={
+                  currentPage === 1
+                    ? "pointer-events-none opacity-50"
+                    : "cursor-pointer"
+                }
+              />
+            </PaginationItem>
+
+            {getPageNumbers().map((page, index) => {
+              if (page === "ellipsis1" || page === "ellipsis2") {
+                return (
+                  <PaginationItem key={`ellipsis-${index}`}>
+                    <PaginationEllipsis />
+                  </PaginationItem>
+                );
+              }
+
+              return (
+                <PaginationItem key={`page-${page}`}>
+                  <PaginationLink
+                    onClick={() => handlePageChange(page as number)}
+                    isActive={currentPage === page}
+                    className="cursor-pointer"
+                  >
+                    {page}
+                  </PaginationLink>
+                </PaginationItem>
+              );
+            })}
+
+            <PaginationItem>
+              <PaginationNext
+                onClick={() => handlePageChange(currentPage + 1)}
+                className={
+                  currentPage === paginationMeta.totalPages
+                    ? "pointer-events-none opacity-50"
+                    : "cursor-pointer"
+                }
+              />
+            </PaginationItem>
+          </PaginationContent>
+        </Pagination>
+      )}
+
+      {/* <Pagination className="mt-4">
         <PaginationContent>
           <PaginationItem>
             <PaginationPrevious href="#" />
@@ -185,7 +360,7 @@ export default function SectionPage() {
             <PaginationNext href="#" />
           </PaginationItem>
         </PaginationContent>
-      </Pagination>
+      </Pagination> */}
 
       <SubjectModal
         isOpen={isModalOpen}

@@ -61,7 +61,7 @@ export function SectionModal({ isOpen, onClose, section }: SectionModalProps) {
   // Fetch courses data
   const fetchCourses = useCallback(async () => {
     try {
-      const response = await fetch("/api/course");
+      const response = await fetch("/api/course-list");
       if (!response.ok) {
         throw new Error("Failed to fetch courses");
       }

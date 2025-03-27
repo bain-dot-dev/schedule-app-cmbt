@@ -1,29 +1,50 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { PrismaClient } from "@prisma/client";
 
 const prisma = new PrismaClient();
 
-// This would typically connect to your database
-// For demo purposes, we're using an in-memory array
-// const subjects = [
-//   {
-//     id: "1",
-//     subjectName: "MATH101",
-//     subjectCode: "M101",
-//     numberOfUnits: "3",
-//   },
-//   {
-//     id: "2",
-//     subjectName: "ENG101",
-//     subjectCode: "E101",
-//     numberOfUnits: "3",
-//   },
-// ]
+export async function GET(request: NextRequest) {
+  try {
+    // Get pagination parameters from the URL
+    const searchParams = request.nextUrl.searchParams;
+    const page = Number.parseInt(searchParams.get("page") || "1");
+    const limit = Number.parseInt(searchParams.get("limit") || "10");
 
-export async function GET() {
-  // Return all subjects
-  const subjects = await prisma.subject.findMany();
-  return NextResponse.json(subjects);
+    // Calculate skip value for pagination
+    const skip = (page - 1) * limit;
+
+    // Get total count for pagination metadata
+    const totalItems = await prisma.subject.count();
+
+    // Get paginated data
+    const subjects = await prisma.subject.findMany({
+      skip,
+      take: limit,
+      orderBy: {
+        subjectName: "asc",
+      },
+    });
+
+    // Calculate pagination metadata
+    const totalPages = Math.ceil(totalItems / limit);
+
+    // Return paginated response
+    return NextResponse.json({
+      data: subjects,
+      meta: {
+        totalItems,
+        itemsPerPage: limit,
+        totalPages,
+        currentPage: page,
+      },
+    });
+  } catch (error) {
+    console.error("Error fetching subjects:", error);
+    return NextResponse.json(
+      { error: "Failed to fetch subjects" },
+      { status: 500 }
+    );
+  }
 }
 
 // export async function POST(request: Request) {

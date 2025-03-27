@@ -29,41 +29,113 @@ interface Room {
   type: string;
 }
 
-// This would typically come from your database
-// const roomData = [
-//   {
-//     roomNo: "101",
-//     type: "Classroom",
-//   },
-// ];
+interface PaginationMeta {
+  totalItems: number;
+  itemsPerPage: number;
+  totalPages: number;
+  currentPage: number;
+}
 
 export default function RoomPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedRoom, setSelectedRoom] = useState<Room | null>(null);
   const [rooms, setRooms] = useState<Room[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState("");
 
-  // Fetch rooms data
-  const fetchRooms = useCallback(async () => {
-    setIsLoading(true);
-    try {
-      const response = await fetch("/api/room");
-      if (!response.ok) {
-        throw new Error("Failed to fetch rooms");
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage] = useState(10); // You can make this adjustable if needed
+  const [paginationMeta, setPaginationMeta] = useState<PaginationMeta>({
+    totalItems: 0,
+    itemsPerPage: itemsPerPage,
+    totalPages: 1,
+    currentPage: 1,
+  });
+
+  // Fetch rooms data with pagination
+  const fetchRooms = useCallback(
+    async (page = 1) => {
+      setIsLoading(true);
+      try {
+        // Add pagination parameters to the API request
+        const response = await fetch(
+          `/api/room?page=${page}&limit=${itemsPerPage}`
+        );
+
+        if (!response.ok) {
+          throw new Error("Failed to fetch rooms");
+        }
+
+        const data = await response.json();
+
+        // If your API returns paginated data in a specific format, adjust accordingly
+        // This assumes the API returns { data: Room[], meta: PaginationMeta }
+        if (data.data && data.meta) {
+          setRooms(data.data);
+          setPaginationMeta(data.meta);
+        } else {
+          // Fallback if API doesn't support pagination yet
+          setRooms(data);
+
+          // Calculate pagination meta manually
+          const totalItems = data.length;
+          const totalPages = Math.ceil(totalItems / itemsPerPage);
+
+          // Get the current page of data
+          const startIndex = (page - 1) * itemsPerPage;
+          const endIndex = startIndex + itemsPerPage;
+          const paginatedData = data.slice(startIndex, endIndex);
+
+          setRooms(paginatedData);
+          setPaginationMeta({
+            totalItems,
+            itemsPerPage,
+            totalPages,
+            currentPage: page,
+          });
+        }
+      } catch (error) {
+        console.error("Error fetching rooms:", error);
+      } finally {
+        setIsLoading(false);
       }
-      const data = await response.json();
-      setRooms(data);
-    } catch (error) {
-      console.error("Error fetching rooms:", error);
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
+    },
+    [itemsPerPage]
+  );
 
-  // Load rooms data on component mount
+  // Load rooms data on component mount or when page changes
   useEffect(() => {
-    fetchRooms();
-  }, [fetchRooms]);
+    fetchRooms(currentPage);
+  }, [fetchRooms, currentPage]);
+
+  // Handle page change
+  const handlePageChange = (page: number) => {
+    if (page < 1 || page > paginationMeta.totalPages) return;
+    setCurrentPage(page);
+  };
+
+  // // Fetch rooms data
+  // const fetchRooms = useCallback(async () => {
+  //   setIsLoading(true);
+  //   try {
+  //     const response = await fetch("/api/room");
+  //     if (!response.ok) {
+  //       throw new Error("Failed to fetch rooms");
+  //     }
+  //     const data = await response.json();
+  //     setRooms(data);
+  //   } catch (error) {
+  //     console.error("Error fetching rooms:", error);
+  //   } finally {
+  //     setIsLoading(false);
+  //   }
+  // }, []);
+
+  // // Load rooms data on component mount
+  // useEffect(() => {
+  //   fetchRooms();
+  // }, [fetchRooms]);
 
   // Open modal for adding a new room
   const handleAddRoom = () => {
@@ -83,6 +155,57 @@ export default function RoomPage() {
     fetchRooms(); // Refresh the data after modal closes
   };
 
+  // Handle search input change
+  const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchTerm(e.target.value);
+    // Reset to first page when searching
+    setCurrentPage(1);
+  };
+
+  // Filter rooms based on search term
+  const filteredRooms = rooms.filter(
+    (room) =>
+      room.roomNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      room.type.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  // Generate page numbers for pagination
+  const getPageNumbers = () => {
+    const { totalPages, currentPage } = paginationMeta;
+    const pageNumbers = [];
+
+    // Always show first page
+    pageNumbers.push(1);
+
+    // Show ellipsis if needed
+    if (currentPage > 3) {
+      pageNumbers.push("ellipsis1");
+    }
+
+    // Show current page and surrounding pages
+    for (
+      let i = Math.max(2, currentPage - 1);
+      i <= Math.min(totalPages - 1, currentPage + 1);
+      i++
+    ) {
+      if (i !== 1 && i !== totalPages) {
+        pageNumbers.push(i);
+      }
+    }
+
+    // Show ellipsis if needed
+    if (currentPage < totalPages - 2) {
+      pageNumbers.push("ellipsis2");
+    }
+
+    // Always show last page if there's more than one page
+    if (totalPages > 1) {
+      pageNumbers.push(totalPages);
+    }
+
+    return pageNumbers;
+  };
+
   return (
     <div className="py-8">
       <div className="mb-8 flex items-center justify-between">
@@ -95,6 +218,8 @@ export default function RoomPage() {
             <Input
               placeholder="Search room..."
               className="w-[230px] pl-10 pr-4"
+              value={searchTerm}
+              onChange={handleSearch}
             />
           </div>
           <Button onClick={handleAddRoom} className="gap-2">
@@ -109,7 +234,7 @@ export default function RoomPage() {
           <div className="flex justify-center py-8">Loading rooms...</div>
         ) : (
           <div className="grid gap-4">
-            {rooms.length === 0 ? (
+            {filteredRooms.length === 0 ? (
               <div className="text-center py-8">
                 No rooms found. Add your first room.
               </div>
@@ -123,7 +248,7 @@ export default function RoomPage() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {rooms.map((room) => (
+                  {filteredRooms.map((room) => (
                     <TableRow key={room.roomID}>
                       <TableCell>{room.roomNumber}</TableCell>
                       <TableCell>{room.type}</TableCell>
@@ -150,7 +275,7 @@ export default function RoomPage() {
         )}
       </div>
 
-      <Pagination className="mt-4">
+      {/* <Pagination className="mt-4">
         <PaginationContent>
           <PaginationItem>
             <PaginationPrevious href="#" />
@@ -173,7 +298,57 @@ export default function RoomPage() {
             <PaginationNext href="#" />
           </PaginationItem>
         </PaginationContent>
-      </Pagination>
+      </Pagination> */}
+
+      {paginationMeta.totalPages > 1 && (
+        <Pagination className="mt-4">
+          <PaginationContent>
+            <PaginationItem>
+              <PaginationPrevious
+                onClick={() => handlePageChange(currentPage - 1)}
+                className={
+                  currentPage === 1
+                    ? "pointer-events-none opacity-50"
+                    : "cursor-pointer"
+                }
+              />
+            </PaginationItem>
+
+            {getPageNumbers().map((page, index) => {
+              if (page === "ellipsis1" || page === "ellipsis2") {
+                return (
+                  <PaginationItem key={`ellipsis-${index}`}>
+                    <PaginationEllipsis />
+                  </PaginationItem>
+                );
+              }
+
+              return (
+                <PaginationItem key={`page-${page}`}>
+                  <PaginationLink
+                    onClick={() => handlePageChange(page as number)}
+                    isActive={currentPage === page}
+                    className="cursor-pointer"
+                  >
+                    {page}
+                  </PaginationLink>
+                </PaginationItem>
+              );
+            })}
+
+            <PaginationItem>
+              <PaginationNext
+                onClick={() => handlePageChange(currentPage + 1)}
+                className={
+                  currentPage === paginationMeta.totalPages
+                    ? "pointer-events-none opacity-50"
+                    : "cursor-pointer"
+                }
+              />
+            </PaginationItem>
+          </PaginationContent>
+        </Pagination>
+      )}
 
       <RoomModal
         isOpen={isModalOpen}

@@ -37,41 +37,113 @@ interface Course {
   courseProgram: string;
 }
 
-// This would typically come from your database
-// const courseData = [
-//   {
-//     courseCode: "HM",
-//     courseProgram: "Hospitality Management",
-//   },
-// ];
+interface PaginationMeta {
+  totalItems: number;
+  itemsPerPage: number;
+  totalPages: number;
+  currentPage: number;
+}
 
 export default function SectionPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedCourse, setSelectedCourse] = useState<Course | null>(null);
   const [courses, setCourses] = useState<Course[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState("");
 
-  // Fetch courses data
-  const fetchCourses = useCallback(async () => {
-    setIsLoading(true);
-    try {
-      const response = await fetch("/api/course");
-      if (!response.ok) {
-        throw new Error("Failed to fetch courses");
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage] = useState(10); // You can make this adjustable if needed
+  const [paginationMeta, setPaginationMeta] = useState<PaginationMeta>({
+    totalItems: 0,
+    itemsPerPage: itemsPerPage,
+    totalPages: 1,
+    currentPage: 1,
+  });
+
+  // // Fetch courses data
+  // const fetchCourses = useCallback(async () => {
+  //   setIsLoading(true);
+  //   try {
+  //     const response = await fetch("/api/course");
+  //     if (!response.ok) {
+  //       throw new Error("Failed to fetch courses");
+  //     }
+  //     const data = await response.json();
+  //     setCourses(data);
+  //   } catch (error) {
+  //     console.error("Error fetching courses:", error);
+  //   } finally {
+  //     setIsLoading(false);
+  //   }
+  // }, []);
+
+  // // Load courses data on component mount
+  // useEffect(() => {
+  //   fetchCourses();
+  // }, [fetchCourses]);
+
+  // Fetch courses data with pagination
+  const fetchCourses = useCallback(
+    async (page = 1) => {
+      setIsLoading(true);
+      try {
+        // Add pagination parameters to the API request
+        const response = await fetch(
+          `/api/course?page=${page}&limit=${itemsPerPage}`
+        );
+
+        if (!response.ok) {
+          throw new Error("Failed to fetch courses");
+        }
+
+        const data = await response.json();
+
+        // If your API returns paginated data in a specific format, adjust accordingly
+        // This assumes the API returns { data: Course[], meta: PaginationMeta }
+        if (data.data && data.meta) {
+          setCourses(data.data);
+          setPaginationMeta(data.meta);
+        } else {
+          // Fallback if API doesn't support pagination yet
+          setCourses(data);
+
+          // Calculate pagination meta manually
+          const totalItems = data.length;
+          const totalPages = Math.ceil(totalItems / itemsPerPage);
+
+          // Get the current page of data
+          const startIndex = (page - 1) * itemsPerPage;
+          const endIndex = startIndex + itemsPerPage;
+          const paginatedData = data.slice(startIndex, endIndex);
+
+          setCourses(paginatedData);
+          setPaginationMeta({
+            totalItems,
+            itemsPerPage,
+            totalPages,
+            currentPage: page,
+          });
+        }
+      } catch (error) {
+        console.error("Error fetching courses:", error);
+      } finally {
+        setIsLoading(false);
       }
-      const data = await response.json();
-      setCourses(data);
-    } catch (error) {
-      console.error("Error fetching courses:", error);
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
+    },
+    [itemsPerPage]
+  );
 
-  // Load courses data on component mount
+  // Load courses data on component mount or when page changes
   useEffect(() => {
-    fetchCourses();
-  }, [fetchCourses]);
+    fetchCourses(currentPage);
+  }, [fetchCourses, currentPage]);
+
+  // Handle page change
+  const handlePageChange = (page: number) => {
+    if (page < 1 || page > paginationMeta.totalPages) return;
+    setCurrentPage(page);
+  };
 
   // Open modal for adding a new course
   const handleAddCourse = () => {
@@ -91,6 +163,57 @@ export default function SectionPage() {
     fetchCourses(); // Refresh the data after modal closes
   };
 
+  // Filter courses based on search term
+  const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchTerm(e.target.value);
+    // Reset to first page when searching
+    setCurrentPage(1);
+  };
+
+  // Apply search filter
+  const filteredCourses = courses.filter(
+    (course) =>
+      course.courseCode.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      course.courseProgram.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  // Generate page numbers for pagination
+  const getPageNumbers = () => {
+    const { totalPages, currentPage } = paginationMeta;
+    const pageNumbers = [];
+
+    // Always show first page
+    pageNumbers.push(1);
+
+    // Show ellipsis if needed
+    if (currentPage > 3) {
+      pageNumbers.push("ellipsis1");
+    }
+
+    // Show current page and surrounding pages
+    for (
+      let i = Math.max(2, currentPage - 1);
+      i <= Math.min(totalPages - 1, currentPage + 1);
+      i++
+    ) {
+      if (i !== 1 && i !== totalPages) {
+        pageNumbers.push(i);
+      }
+    }
+
+    // Show ellipsis if needed
+    if (currentPage < totalPages - 2) {
+      pageNumbers.push("ellipsis2");
+    }
+
+    // Always show last page if there's more than one page
+    if (totalPages > 1) {
+      pageNumbers.push(totalPages);
+    }
+
+    return pageNumbers;
+  };
+
   return (
     <div className="py-8">
       <div className="mb-8 flex items-center justify-between">
@@ -103,6 +226,8 @@ export default function SectionPage() {
             <Input
               placeholder="Search course..."
               className="w-[230px] pl-10 pr-4"
+              value={searchTerm}
+              onChange={handleSearch}
             />
           </div>
           <Button className="gap-2" onClick={handleAddCourse}>
@@ -117,7 +242,7 @@ export default function SectionPage() {
           <div className="flex justify-center py-8">Loading courses...</div>
         ) : (
           <div className="grid gap-4">
-            {courses.length === 0 ? (
+            {filteredCourses.length === 0 ? (
               <div className="text-center py-8">
                 No courses found. Add your first course.
               </div>
@@ -131,7 +256,7 @@ export default function SectionPage() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {courses.map((course) => (
+                  {filteredCourses.map((course) => (
                     <TableRow key={course.courseProgramID}>
                       <TableCell>{course.courseCode}</TableCell>
                       <TableCell>{course.courseProgram}</TableCell>
@@ -158,7 +283,7 @@ export default function SectionPage() {
         )}
       </div>
 
-      <Pagination className="mt-4">
+      {/* <Pagination className="mt-4">
         <PaginationContent>
           <PaginationItem>
             <PaginationPrevious href="#" />
@@ -181,7 +306,57 @@ export default function SectionPage() {
             <PaginationNext href="#" />
           </PaginationItem>
         </PaginationContent>
-      </Pagination>
+      </Pagination> */}
+
+      {paginationMeta.totalPages > 1 && (
+        <Pagination className="mt-4">
+          <PaginationContent>
+            <PaginationItem>
+              <PaginationPrevious
+                onClick={() => handlePageChange(currentPage - 1)}
+                className={
+                  currentPage === 1
+                    ? "pointer-events-none opacity-50"
+                    : "cursor-pointer"
+                }
+              />
+            </PaginationItem>
+
+            {getPageNumbers().map((page, index) => {
+              if (page === "ellipsis1" || page === "ellipsis2") {
+                return (
+                  <PaginationItem key={`ellipsis-${index}`}>
+                    <PaginationEllipsis />
+                  </PaginationItem>
+                );
+              }
+
+              return (
+                <PaginationItem key={`page-${page}`}>
+                  <PaginationLink
+                    onClick={() => handlePageChange(page as number)}
+                    isActive={currentPage === page}
+                    className="cursor-pointer"
+                  >
+                    {page}
+                  </PaginationLink>
+                </PaginationItem>
+              );
+            })}
+
+            <PaginationItem>
+              <PaginationNext
+                onClick={() => handlePageChange(currentPage + 1)}
+                className={
+                  currentPage === paginationMeta.totalPages
+                    ? "pointer-events-none opacity-50"
+                    : "cursor-pointer"
+                }
+              />
+            </PaginationItem>
+          </PaginationContent>
+        </Pagination>
+      )}
 
       <CourseModal
         isOpen={isModalOpen}

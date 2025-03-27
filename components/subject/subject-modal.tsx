@@ -47,7 +47,7 @@ interface SubjectModalProps {
     subjectID?: string;
     subjectName: string;
     // subjectCode: string;
-    numberOfUnits: number;
+    numberOfUnits: string;
   } | null;
 }
 
@@ -61,7 +61,7 @@ export function SubjectModal({ isOpen, onClose, subject }: SubjectModalProps) {
     defaultValues: {
       subjectName: "",
       // subjectCode: "",
-      numberOfUnits: 0,
+      numberOfUnits: "",
     },
   });
 
@@ -71,13 +71,13 @@ export function SubjectModal({ isOpen, onClose, subject }: SubjectModalProps) {
       form.reset({
         subjectName: subject.subjectName || "",
         // subjectCode: subject.subjectCode || "",
-        numberOfUnits: subject.numberOfUnits || 0,
+        numberOfUnits: subject.numberOfUnits || "",
       });
     } else {
       form.reset({
         subjectName: "",
         // subjectCode: "",
-        numberOfUnits: 0,
+        numberOfUnits: "",
       });
     }
   }, [subject, form]);
@@ -142,6 +142,7 @@ export function SubjectModal({ isOpen, onClose, subject }: SubjectModalProps) {
       // Convert numberOfUnits to a number before sending
       const formattedData = {
         ...data,
+        numberOfUnits: parseInt(data.numberOfUnits),
       };
 
       if (isEditMode && subject?.subjectID) {

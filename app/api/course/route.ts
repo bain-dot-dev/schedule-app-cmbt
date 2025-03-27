@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { PrismaClient } from "@prisma/client";
 
 const prisma = new PrismaClient();
@@ -18,10 +18,54 @@ const prisma = new PrismaClient();
 //   },
 // ]
 
-export async function GET() {
-  // Return all courses
-  const courses = await prisma.courseProgram.findMany();
-  return NextResponse.json(courses);
+// export async function GET() {
+//   // Return all courses
+//   const courses = await prisma.courseProgram.findMany();
+//   return NextResponse.json(courses);
+// }
+
+export async function GET(request: NextRequest) {
+  try {
+    // Get pagination parameters from the URL
+    const searchParams = request.nextUrl.searchParams;
+    const page = Number.parseInt(searchParams.get("page") || "1");
+    const limit = Number.parseInt(searchParams.get("limit") || "10");
+
+    // Calculate skip value for pagination
+    const skip = (page - 1) * limit;
+
+    // Get total count for pagination metadata
+    const totalItems = await prisma.courseProgram.count();
+
+    // Get paginated data
+    const courses = await prisma.courseProgram.findMany({
+      skip,
+      take: limit,
+      orderBy: {
+        courseCode: "asc",
+      },
+    });
+
+    // Calculate pagination metadata
+    const totalPages = Math.ceil(totalItems / limit);
+
+    // Return paginated response
+    return NextResponse.json({
+      data: courses,
+      meta: {
+        totalItems,
+        itemsPerPage: limit,
+        totalPages,
+        currentPage: page,
+      },
+    });
+  } catch (error) {
+    console.error("Error fetching courses:", error);
+    return NextResponse.json(
+      { error: "Failed to fetch courses" },
+      { status: 500 }
+    );
+  }
 }
 
 // export async function POST(request: Request) {
