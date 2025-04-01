@@ -1,50 +1,112 @@
-"use client"
+"use client";
 
-import { useState, useEffect } from "react"
-import { useForm } from "react-hook-form"
-import { zodResolver } from "@hookform/resolvers/zod"
-import { toast } from "sonner"
-import { Button } from "@/components/ui/button"
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
-import { Input } from "@/components/ui/input"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { FacultyFormValues, facultyFormSchema } from "@/schemas/faculty.schema"
+import { useState, useEffect, useCallback } from "react";
+import { UserRound } from "lucide-react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  type FacultyFormValues,
+  facultyFormSchema,
+} from "@/schemas/faculty.schema";
 
-
-// Sample data for dropdowns
-const departments = [
-  { id: "CMBT", name: "CMBT" },
-  { id: "CICS", name: "CICS" },
-  { id: "COE", name: "COE" },
-  { id: "CAS", name: "CAS" },
-]
-
+// Define the ranks from the schema
 const ranks = [
-  { id: "Instructor 1", name: "Instructor 1" },
-  { id: "Instructor 2", name: "Instructor 2" },
-  { id: "Assistant Professor 1", name: "Assistant Professor 1" },
-  { id: "Associate Professor 1", name: "Associate Professor 1" },
-  { id: "Professor 1", name: "Professor 1" },
-]
+  "Instructor 1",
+  "Instructor 2",
+  "Instructor 3",
+  "Assistant Professor 1",
+  "Assistant Professor 2",
+  "Assistant Professor 3",
+  "Assistant Professor 4",
+  "Associate Professor 1",
+  "Associate Professor 2",
+  "Associate Professor 3",
+  "Associate Professor 4",
+  "Associate Professor 5",
+  "Professor 1",
+  "Professor 2",
+  "Professor 3",
+  "Professor 4",
+  "Professor 5",
+  "Professor 6",
+];
+
+interface Department {
+  courseProgramID: string;
+  courseCode: string;
+  courseProgram: string;
+}
 
 interface FacultyModalProps {
-  isOpen: boolean
-  onClose: () => void
+  isOpen: boolean;
+  onClose: () => void;
   faculty?: {
-    id?: string
-    firstName: string
-    middleName?: string
-    lastName: string
-    employeeNumber: string
-    department: string
-    rank: string
-  } | null
+    facultyID: number;
+    employeeNumber: string;
+    firstName: string;
+    middleName?: string;
+    lastName: string;
+    rank: string;
+    CourseProgram: CourseProgram | null;
+  } | null;
+}
+
+interface CourseProgram {
+  courseProgramID: number;
+  courseCode: string;
+  courseProgram: string;
 }
 
 export function FacultyModal({ isOpen, onClose, faculty }: FacultyModalProps) {
-  const isEditMode = !!faculty?.id
-  const [isSubmitting, setIsSubmitting] = useState(false)
+  const isEditMode = !!faculty?.facultyID;
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [departments, setDepartments] = useState<Department[]>([]);
+
+  // Fetch departments data
+  const fetchDepartments = useCallback(async () => {
+    try {
+      const response = await fetch("/api/course-list");
+      if (!response.ok) {
+        throw new Error("Failed to fetch departments");
+      }
+      const data = await response.json();
+      setDepartments(data);
+    } catch (error) {
+      console.error("Error fetching departments:", error);
+      toast.error("Failed to load departments");
+    }
+  }, []);
+
+  useEffect(() => {
+    if (isOpen) {
+      fetchDepartments();
+    }
+  }, [fetchDepartments, isOpen]);
 
   // Initialize the form with react-hook-form
   const form = useForm<FacultyFormValues>({
@@ -55,9 +117,9 @@ export function FacultyModal({ isOpen, onClose, faculty }: FacultyModalProps) {
       lastName: "",
       employeeNumber: "",
       department: "",
-      rank: "",
+      rank: "Instructor 1" as FacultyFormValues["rank"],
     },
-  })
+  });
 
   // Update form values when faculty data changes (for edit mode)
   useEffect(() => {
@@ -67,9 +129,9 @@ export function FacultyModal({ isOpen, onClose, faculty }: FacultyModalProps) {
         middleName: faculty.middleName || "",
         lastName: faculty.lastName || "",
         employeeNumber: faculty.employeeNumber || "",
-        department: faculty.department || "",
-        rank: faculty.rank || "",
-      })
+        department: faculty.CourseProgram?.courseCode || "",
+        rank: (faculty.rank as FacultyFormValues["rank"]) || "Instructor 1",
+      });
     } else {
       form.reset({
         firstName: "",
@@ -77,32 +139,37 @@ export function FacultyModal({ isOpen, onClose, faculty }: FacultyModalProps) {
         lastName: "",
         employeeNumber: "",
         department: "",
-        rank: "",
-      })
+        rank: "Instructor 1",
+      });
     }
-  }, [faculty, form])
+  }, [faculty, form]);
+
+  useEffect(() => {
+    console.log(form.formState.errors);
+  }, [form.formState.errors]);
 
   // Handle form submission
   const onSubmit = async (data: FacultyFormValues) => {
-    setIsSubmitting(true)
+    setIsSubmitting(true);
     try {
-      if (isEditMode && faculty?.id) {
+      if (isEditMode && faculty?.facultyID) {
         // PUT request to update existing faculty
-        const response = await fetch(`/api/faculty/${faculty.id}`, {
+        const response = await fetch(`/api/faculty/${faculty.facultyID}`, {
           method: "PUT",
           headers: {
             "Content-Type": "application/json",
           },
           body: JSON.stringify(data),
-        })
+        });
 
         if (!response.ok) {
-          throw new Error("Failed to update faculty member")
+          const errorData = await response.json();
+          throw new Error(errorData.error || "Failed to update faculty member");
         }
 
         toast.success("Faculty updated", {
           description: "Faculty member has been updated successfully.",
-        })
+        });
       } else {
         // POST request to create new faculty
         const response = await fetch("/api/faculty", {
@@ -111,34 +178,36 @@ export function FacultyModal({ isOpen, onClose, faculty }: FacultyModalProps) {
             "Content-Type": "application/json",
           },
           body: JSON.stringify(data),
-        })
+        });
 
         if (!response.ok) {
-          throw new Error("Failed to add faculty member")
+          const errorData = await response.json();
+          throw new Error(errorData.error || "Failed to add faculty member");
         }
 
         toast.success("Faculty added", {
           description: "New faculty member has been added successfully.",
-        })
+        });
       }
 
       // Close the modal and reset form
-      onClose()
-      form.reset()
+      onClose();
+      form.reset();
     } catch (error) {
-      console.error("Error submitting faculty data:", error)
+      console.error("Error submitting faculty data:", error);
       toast.error("Error", {
-        description: error instanceof Error ? error.message : "An error occurred",
-      })
+        description:
+          error instanceof Error ? error.message : "An error occurred",
+      });
     } finally {
-      setIsSubmitting(false)
+      setIsSubmitting(false);
     }
-  }
+  };
 
   // Handle form clearing
   const handleClear = () => {
-    form.reset()
-  }
+    form.reset();
+  };
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -146,32 +215,18 @@ export function FacultyModal({ isOpen, onClose, faculty }: FacultyModalProps) {
         <DialogHeader className="flex flex-row items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-full border">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="24"
-                height="24"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                className="lucide lucide-user-round"
-              >
-                <circle cx="12" cy="8" r="5" />
-                <path d="M20 21a8 8 0 0 0-16 0" />
-              </svg>
+              <UserRound className="h-5 w-5" />
             </div>
             <div>
-              <DialogTitle className="text-xl">{isEditMode ? "Edit faculty member" : "Add faculty member"}</DialogTitle>
+              <DialogTitle className="text-xl">
+                {isEditMode ? "Edit faculty member" : "Add faculty member"}
+              </DialogTitle>
               <DialogDescription>
-                Fill in the data below to {isEditMode ? "edit" : "add an"} instructor
+                Fill in the data below to {isEditMode ? "edit" : "add an"}{" "}
+                instructor
               </DialogDescription>
             </div>
           </div>
-          {/* <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full" onClick={onClose}>
-            <X className="h-4 w-4" />
-          </Button> */}
         </DialogHeader>
 
         <Form {...form}>
@@ -241,7 +296,11 @@ export function FacultyModal({ isOpen, onClose, faculty }: FacultyModalProps) {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Department</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value} value={field.value}>
+                    <Select
+                      onValueChange={field.onChange}
+                      defaultValue={field.value}
+                      value={field.value}
+                    >
                       <FormControl>
                         <SelectTrigger>
                           <SelectValue placeholder="Select department" />
@@ -249,8 +308,11 @@ export function FacultyModal({ isOpen, onClose, faculty }: FacultyModalProps) {
                       </FormControl>
                       <SelectContent>
                         {departments.map((dept) => (
-                          <SelectItem key={dept.id} value={dept.id}>
-                            {dept.name}
+                          <SelectItem
+                            key={`dept-${dept.courseProgram}`}
+                            value={dept.courseCode}
+                          >
+                            {dept.courseProgram}
                           </SelectItem>
                         ))}
                       </SelectContent>
@@ -266,7 +328,11 @@ export function FacultyModal({ isOpen, onClose, faculty }: FacultyModalProps) {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Rank</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value} value={field.value}>
+                    <Select
+                      onValueChange={field.onChange}
+                      defaultValue={field.value}
+                      value={field.value}
+                    >
                       <FormControl>
                         <SelectTrigger>
                           <SelectValue placeholder="Select position" />
@@ -274,8 +340,8 @@ export function FacultyModal({ isOpen, onClose, faculty }: FacultyModalProps) {
                       </FormControl>
                       <SelectContent>
                         {ranks.map((rank) => (
-                          <SelectItem key={rank.id} value={rank.id}>
-                            {rank.name}
+                          <SelectItem key={`rank-${rank}`} value={rank}>
+                            {rank}
                           </SelectItem>
                         ))}
                       </SelectContent>
@@ -287,7 +353,12 @@ export function FacultyModal({ isOpen, onClose, faculty }: FacultyModalProps) {
             </div>
 
             <div className="flex justify-end gap-2 pt-4">
-              <Button type="button" variant="outline" onClick={handleClear} disabled={isSubmitting}>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={handleClear}
+                disabled={isSubmitting}
+              >
                 Clear
               </Button>
               <Button type="submit" disabled={isSubmitting}>
@@ -298,6 +369,5 @@ export function FacultyModal({ isOpen, onClose, faculty }: FacultyModalProps) {
         </Form>
       </DialogContent>
     </Dialog>
-  )
+  );
 }
-

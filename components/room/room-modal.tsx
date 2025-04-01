@@ -114,6 +114,7 @@ export function RoomModal({ isOpen, onClose, room }: RoomModalProps) {
 
         toast.success("Room added", {
           description: "New room has been added successfully.",
+          
         });
       }
 

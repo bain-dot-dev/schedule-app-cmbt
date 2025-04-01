@@ -22,6 +22,7 @@ import {
   PaginationPrevious,
 } from "@/components/ui/pagination";
 import { RoomModal } from "@/components/room/room-modal";
+// import { toast } from "sonner";
 
 interface Room {
   roomID: string;
@@ -208,11 +209,20 @@ export default function RoomPage() {
 
   return (
     <div className="py-8">
-      <div className="mb-8 flex items-center justify-between">
-        <h1 className="text-[32px] leading-5 font-semibold text-masala-900">
+      <div className="mb-8 flex flex-col lg:flex-row items-center justify-between">
+      <h1 className="text-[32px] leading-5 font-semibold text-masala-900 pb-8 lg:pb-0">
           List of rooms
         </h1>
         <div className="flex items-center gap-4">
+          {/* <button
+            onClick={() =>
+              toast.success("Success!", {
+                description: "This is a success message!",
+              })
+            }
+          >
+            Show Toast
+          </button> */}
           <div className="relative">
             <SearchIcon className="absolute left-3 top-2 h-5 w-5 text-rock-blue-500" />
             <Input
@@ -229,7 +239,7 @@ export default function RoomPage() {
         </div>
       </div>
 
-      <div className="mx-12 h-[620px] rounded-lg border bg-zircon-50/60">
+      <div className="lg:mx-12 h-auto rounded-lg border bg-zircon-50/60">
         {isLoading ? (
           <div className="flex justify-center py-8">Loading rooms...</div>
         ) : (

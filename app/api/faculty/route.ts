@@ -1,88 +1,156 @@
-import { NextResponse } from "next/server";
+import { type NextRequest, NextResponse } from "next/server";
 import { PrismaClient } from "@prisma/client";
+import { facultyFormSchema } from "@/schemas/faculty.schema";
 
 const prisma = new PrismaClient();
-// This would typically connect to your database
-// For demo purposes, we're using an in-memory array
-// const facultyMembers = [
-//   {
-//     id: "1",
-//     firstName: "John",
-//     middleName: "Domingo",
-//     lastName: "Dela Fuente",
-//     employeeNumber: "2010413702099",
-//     department: "CMBT",
-//     rank: "Instructor 1",
-//   },
-//   {
-//     id: "2",
-//     firstName: "Maria",
-//     middleName: "Santos",
-//     lastName: "Cruz",
-//     employeeNumber: "2011523804123",
-//     department: "CICS",
-//     rank: "Assistant Professor 1",
-//   },
-// ]
 
-export async function GET() {
-  // Return all faculty members
+// GET all faculty members
+// export async function GET() {
+//   try {
+//     const faculty = await prisma.faculty.findMany({
+//       orderBy: {
+//         lastName: "asc",
+//       },
+//       include: {
+//         CourseProgram: true,
+//       },
+//     });
 
-  const facultyMembers = await prisma.faculty.findMany({
-    include: { department: true, rank: true },
-  });
-  return NextResponse.json(facultyMembers);
+//     return NextResponse.json(faculty);
+//   } catch (error) {
+//     console.error("Error fetching faculty:", error);
+//     return NextResponse.json(
+//       { error: "Failed to fetch faculty members" },
+//       { status: 500 }
+//     );
+//   }
+// }
+
+// GET all faculty members with pagination
+export async function GET(req: NextRequest) {
+  try {
+    const searchParams = req.nextUrl.searchParams;
+    const page = Number.parseInt(searchParams.get("page") || "1");
+    const limit = Number.parseInt(searchParams.get("limit") || "10");
+    const search = searchParams.get("search") || "";
+
+    // Calculate skip value for pagination
+    const skip = (page - 1) * limit;
+
+    // Get total count for pagination
+    const totalItems = await prisma.faculty.count({
+      where: {
+        OR: [
+          { firstName: { contains: search, mode: "insensitive" } },
+          { lastName: { contains: search, mode: "insensitive" } },
+          { employeeNumber: { contains: search, mode: "insensitive" } },
+          { rank: { contains: search, mode: "insensitive" } },
+          {
+            CourseProgram: {
+              courseCode: { contains: search, mode: "insensitive" },
+            },
+          },
+        ],
+      },
+    });
+
+    // Get paginated faculty data
+    const faculty = await prisma.faculty.findMany({
+      where: {
+        OR: [
+          { firstName: { contains: search, mode: "insensitive" } },
+          { lastName: { contains: search, mode: "insensitive" } },
+          { employeeNumber: { contains: search, mode: "insensitive" } },
+          { rank: { contains: search, mode: "insensitive" } },
+          {
+            CourseProgram: {
+              courseCode: { contains: search, mode: "insensitive" },
+            },
+          },
+        ],
+      },
+      orderBy: {
+        lastName: "asc",
+      },
+      include: {
+        CourseProgram: true,
+      },
+      skip,
+      take: limit,
+    });
+
+    // Calculate pagination metadata
+    const totalPages = Math.ceil(totalItems / limit);
+
+    return NextResponse.json({
+      data: faculty,
+      meta: {
+        totalItems,
+        itemsPerPage: limit,
+        totalPages,
+        currentPage: page,
+      },
+    });
+  } catch (error) {
+    console.error("Error fetching faculty:", error);
+    return NextResponse.json(
+      { error: "Failed to fetch faculty members" },
+      { status: 500 }
+    );
+  }
 }
 
-export async function POST(request: Request) {
+// POST a new faculty member
+export async function POST(req: NextRequest) {
   try {
-    const data = await request.json();
+    const data = await req.json();
 
-    // Validate required fields
-    if (
-      !data.firstName ||
-      !data.lastName ||
-      !data.employeeNumber ||
-      !data.department ||
-      !data.rank
-    ) {
+    // Validate the request data
+    const validatedData = facultyFormSchema.parse(data);
+
+    // Check if faculty with the same employee number already exists
+    const existingFaculty = await prisma.faculty.findUnique({
+      where: { employeeNumber: validatedData.employeeNumber },
+    });
+
+    if (existingFaculty) {
       return NextResponse.json(
-        { error: "Missing required fields" },
+        { error: "Faculty with this employee number already exists" },
         { status: 400 }
       );
     }
 
-    // Find department and rank
-    const department = await prisma.department.findUnique({
-      where: { departmentName: data.department },
+    // Get department ID from department code
+    const department = await prisma.courseProgram.findUnique({
+      where: { courseCode: validatedData.department },
     });
 
-    const rank = await prisma.rank.findUnique({
-      where: { rankName: data.rank },
-    });
-
-    if (!department || !rank) {
+    if (!department) {
       return NextResponse.json(
-        { error: "Invalid department or rank" },
+        { error: "Department not found" },
         { status: 400 }
       );
     }
 
-    // Create faculty member in database
+    // Create the faculty member
     const newFaculty = await prisma.faculty.create({
       data: {
-        firstName: data.firstName,
-        middleName: data.middleName || "",
-        lastName: data.lastName,
-        employeeNumber: data.employeeNumber,
-        departmentID: department.departmentID,
-        rankID: rank.rankID,
+        firstName: validatedData.firstName,
+        middleName: validatedData.middleName || "",
+        lastName: validatedData.lastName,
+        employeeNumber: validatedData.employeeNumber,
+        rank: validatedData.rank,
+        courseProgramID: department.courseProgramID,
+      },
+      include: {
+        CourseProgram: true,
       },
     });
 
     return NextResponse.json(newFaculty, { status: 201 });
   } catch (error) {
     console.error("Error creating faculty:", error);
+
     return NextResponse.json(
       { error: "Failed to create faculty member" },
       { status: 500 }

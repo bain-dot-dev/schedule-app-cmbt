@@ -1,7 +1,21 @@
+"use client";
+
+import React from "react";
+import { Toaster, toast } from "sonner";
+
 export default function Sidebar() {
   return (
-    <div className="flex h-screen w-64 flex-col border-r bg-white">
-      
+    <div>
+      <Toaster />
+      <button
+        onClick={() =>
+          toast.success("Success!", {
+            description: "This is a success message!",
+          })
+        }
+      >
+        Show Toast
+      </button>
     </div>
   );
 }

@@ -19,6 +19,27 @@ enum SemesterEnum {
   SECOND
 }
 
+// enum RankEnum {
+//   Instructor_1
+//   Instructor_2
+//   Instructor_3
+//   Assistant_Professor_1
+//   Assistant_Professor_2
+//   Assistant_Professor_3
+//   Assistant_Professor_4
+//   Associate_Professor_1
+//   Associate_Professor_2
+//   Associate_Professor_3
+//   Associate_Professor_4
+//   Associate_Professor_5
+//   Professor_1
+//   Professor_2
+//   Professor_3
+//   Professor_4
+//   Professor_5
+//   Professor_6
+// }
+
 model User {
   userID      String       @id @default(uuid())
   firstName   String    @db.VarChar(25)
@@ -58,17 +79,9 @@ model Faculty {
   middleName     String?
   lastName       String
   courseProgramID String
-  rankID         String?
+  rank            String
   CourseProgram CourseProgram @relation(fields: [courseProgramID], references: [courseProgramID])
-  rank           Rank?       @relation(fields: [rankID], references: [rankID])
   schedules      Schedule[]
-}
-
-
-model Rank {
-  rankID   String   @id @default(uuid())
-  rankName String
-  faculties Faculty[]
 }
 
 model Room {

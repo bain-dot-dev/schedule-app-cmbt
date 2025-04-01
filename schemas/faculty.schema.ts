@@ -1,6 +1,6 @@
-import { z } from "zod";
+import { z } from "zod"
 
-const rankEnum = z.enum([
+export const rankEnum = z.enum([
   "Instructor 1",
   "Instructor 2",
   "Instructor 3",
@@ -19,17 +19,18 @@ const rankEnum = z.enum([
   "Professor 4",
   "Professor 5",
   "Professor 6",
-]);
+])
+
 // Define the form schema with validation
 export const facultyFormSchema = z.object({
   firstName: z.string().min(1, { message: "First name is required" }),
   middleName: z.string().optional(),
   lastName: z.string().min(1, { message: "Last name is required" }),
   employeeNumber: z.string().min(1, { message: "Employee number is required" }),
-  specialization: z.string().min(1, { message: "specialization is required" }),
+  department: z.string().min(1, { message: "Department is required" }),
   rank: rankEnum,
-});
+})
 
 // Define the type based on the schema
-export type FacultyFormValues = z.infer<typeof facultyFormSchema>;
-export default facultyFormSchema;
+export type FacultyFormValues = z.infer<typeof facultyFormSchema>
+

@@ -1,118 +1,121 @@
-import { NextResponse } from "next/server";
+import { type NextRequest, NextResponse } from "next/server"
+import { PrismaClient } from "@prisma/client"
+import { facultyFormSchema } from "@/schemas/faculty.schema"
 
-// Reference to the same "database" from the main route
-// In a real app, you'd import your database client here
-let facultyMembers = [
-  {
-    id: "1",
-    firstName: "John",
-    middleName: "Domingo",
-    lastName: "Dela Fuente",
-    employeeNumber: "2010413702099",
-    department: "CMBT",
-    rank: "Instructor 1",
-  },
-  {
-    id: "2",
-    firstName: "Maria",
-    middleName: "Santos",
-    lastName: "Cruz",
-    employeeNumber: "2011523804123",
-    department: "CICS",
-    rank: "Assistant Professor 1",
-  },
-];
+const prisma = new PrismaClient()
 
-export async function GET(
-  request: Request,
-  { params }: { params: { id: string } }
-) {
-  const id = params.id;
-  const faculty = facultyMembers.find((f) => f.id === id);
-
-  if (!faculty) {
-    return NextResponse.json(
-      { error: "Faculty member not found" },
-      { status: 404 }
-    );
-  }
-
-  return NextResponse.json(faculty);
-}
-
-export async function PUT(
-  request: Request,
-  { params }: { params: { id: string } }
-) {
+// GET a specific faculty member
+export async function GET(req: NextRequest, { params }: { params: { id: string } }) {
   try {
-    const id = params.id;
-    const data = await request.json();
+    const id = params.id
 
-    // Find the faculty member
-    const index = facultyMembers.findIndex((f) => f.id === id);
+    const faculty = await prisma.faculty.findUnique({
+      where: { facultyID: id },
+      include: {
+        CourseProgram: true,
+      },
+    })
 
-    if (index === -1) {
-      return NextResponse.json(
-        { error: "Faculty member not found" },
-        { status: 404 }
-      );
+    if (!faculty) {
+      return NextResponse.json({ error: "Faculty member not found" }, { status: 404 })
     }
 
-    // Validate required fields
-    if (
-      !data.firstName ||
-      !data.lastName ||
-      !data.employeeNumber ||
-      !data.department ||
-      !data.rank
-    ) {
-      return NextResponse.json(
-        { error: "Missing required fields" },
-        { status: 400 }
-      );
+    return NextResponse.json(faculty)
+  } catch (error) {
+    console.error("Error fetching faculty:", error)
+    return NextResponse.json({ error: "Failed to fetch faculty member" }, { status: 500 })
+  }
+}
+
+// UPDATE a faculty member
+export async function PUT(req: NextRequest, { params }: { params: { id: string } }) {
+  try {
+    const id = params.id
+    const data = await req.json()
+
+    // Validate the request data
+    const validatedData = facultyFormSchema.parse(data)
+
+    // Check if faculty exists
+    const existingFaculty = await prisma.faculty.findUnique({
+      where: { facultyID: id },
+    })
+
+    if (!existingFaculty) {
+      return NextResponse.json({ error: "Faculty member not found" }, { status: 404 })
+    }
+
+    // Check if another faculty has the same employee number
+    if (validatedData.employeeNumber !== existingFaculty.employeeNumber) {
+      const duplicateEmployee = await prisma.faculty.findUnique({
+        where: { employeeNumber: validatedData.employeeNumber },
+      })
+
+      if (duplicateEmployee) {
+        return NextResponse.json(
+          { error: "Another faculty member with this employee number already exists" },
+          { status: 400 },
+        )
+      }
+    }
+
+    // Get department ID from department code
+    const department = await prisma.courseProgram.findUnique({
+      where: { courseCode: validatedData.department },
+    })
+
+    if (!department) {
+      return NextResponse.json({ error: "Department not found" }, { status: 400 })
     }
 
     // Update the faculty member
-    const updatedFaculty = {
-      ...facultyMembers[index],
-      firstName: data.firstName,
-      middleName: data.middleName || "",
-      lastName: data.lastName,
-      employeeNumber: data.employeeNumber,
-      department: data.department,
-      rank: data.rank,
-    };
+    const updatedFaculty = await prisma.faculty.update({
+      where: { facultyID: id },
+      data: {
+        firstName: validatedData.firstName,
+        middleName: validatedData.middleName || "",
+        lastName: validatedData.lastName,
+        employeeNumber: validatedData.employeeNumber,
+        rank: validatedData.rank,
+        courseProgramID: department.courseProgramID,
+      },
+      include: {
+        CourseProgram: true,
+      },
+    })
 
-    facultyMembers[index] = updatedFaculty;
-
-    return NextResponse.json(updatedFaculty);
+    return NextResponse.json(updatedFaculty)
   } catch (error) {
-    console.error("Error updating faculty:", error);
-    return NextResponse.json(
-      { error: "Failed to update faculty member" },
-      { status: 500 }
-    );
+    console.error("Error updating faculty:", error)
+
+
+    return NextResponse.json({ error: "Failed to update faculty member" }, { status: 500 })
   }
 }
 
-export async function DELETE(
-  request: Request,
-  { params }: { params: { id: string } }
-) {
-  const id = params.id;
+// DELETE a faculty member
+export async function DELETE(req: NextRequest, { params }: { params: { id: string } }) {
+  try {
+    const id = params.id
 
-  // Find the faculty member
-  const index = facultyMembers.findIndex((f) => f.id === id);
+    // Check if faculty exists
+    const existingFaculty = await prisma.faculty.findUnique({
+      where: { facultyID: id },
+    })
 
-  if (index === -1) {
-    return NextResponse.json(
-      { error: "Faculty member not found" },
-      { status: 404 }
-    );
+    if (!existingFaculty) {
+      return NextResponse.json({ error: "Faculty member not found" }, { status: 404 })
+    }
+
+    // Delete the faculty member
+    await prisma.faculty.delete({
+      where: { facultyID: id },
+    })
+
+    return NextResponse.json({ success: true })
+  } catch (error) {
+    console.error("Error deleting faculty:", error)
+    return NextResponse.json({ error: "Failed to delete faculty member" }, { status: 500 })
   }
-
-  // Remove the faculty member
-  facultyMembers = facultyMembers.filter((f) => f.id !== id);
-
-  return NextResponse.json({ success: true });
 }
+
