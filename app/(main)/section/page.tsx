@@ -312,7 +312,7 @@ export default function SectionPage() {
                 </TableHeader>
                 <TableBody>
                   {filteredSections.map((section) => (
-                    <TableRow key={section.sectionID}>
+                    <TableRow key={section.id}>
                       <TableCell>{section.sectionName}</TableCell>
                       <TableCell>{section.courseProgram}</TableCell>
                       <TableCell>

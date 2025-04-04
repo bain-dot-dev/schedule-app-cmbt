@@ -23,6 +23,7 @@ export const rankEnum = z.enum([
 
 // Define the form schema with validation
 export const facultyFormSchema = z.object({
+  facultyID: z.string().optional(),
   firstName: z.string().min(1, { message: "First name is required" }),
   middleName: z.string().optional(),
   lastName: z.string().min(1, { message: "Last name is required" }),
@@ -31,6 +32,18 @@ export const facultyFormSchema = z.object({
   rank: rankEnum,
 })
 
+export const facultyViewSchema = z.object({
+  facultyID: z.string(),
+  firstName: z.string(),
+  middleName: z.string().optional(),
+  lastName: z.string(),
+  employeeNumber: z.string(),
+  department: z.string(),
+  rank: rankEnum,
+})
+
 // Define the type based on the schema
 export type FacultyFormValues = z.infer<typeof facultyFormSchema>
+export type FacultyViewValues = z.infer<typeof facultyViewSchema>
+export default facultyFormSchema
 

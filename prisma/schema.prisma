@@ -15,8 +15,8 @@ datasource db {
 
 
 enum SemesterEnum {
-  FIRST
-  SECOND
+  First_Semester
+  Second_Semester
 }
 
 // enum RankEnum {
@@ -102,7 +102,6 @@ model CourseProgram {
 model Section {
   sectionID       String  @id @default(uuid())
   sectionName     String @unique
-  schedules       Schedule[]
   sectionCourses  SectionCourse[]
 }
 
@@ -112,6 +111,7 @@ model SectionCourse {
   courseProgramID String
   section         Section @relation(fields: [sectionID], references: [sectionID])
   courseProgram   CourseProgram @relation(fields: [courseProgramID], references: [courseProgramID])
+  schedules       Schedule[]
 }
 
 model Subject {
@@ -126,17 +126,16 @@ model Schedule {
   scheduleID     String @id @default(uuid())
   facultyID      String
   roomID         String
-  sectionID      String
+  sectionCourseID      String
   subjectID      String
   academicYearID String
   semester      SemesterEnum
   day            Int
   timeStart      DateTime
   timeEnd        DateTime
-
   faculty      Faculty      @relation(fields: [facultyID], references: [facultyID])
   room         Room         @relation(fields: [roomID], references: [roomID])
-  section      Section      @relation(fields: [sectionID], references: [sectionID])
+  sectionCourse      SectionCourse      @relation(fields: [sectionCourseID], references: [SectionCourseID])
   subject      Subject      @relation(fields: [subjectID], references: [subjectID])
   academicYear AcademicYear @relation(fields: [academicYearID], references: [academicYearID])
 }

@@ -14,29 +14,55 @@ import {
 
 interface CalendarHeaderProps {
   title: string;
-  month: string;
+  // month: string;
   academicYear: string;
   view?: "rooms" | "faculty" | "sections";
   academicYears?: string[];
+  semester: string;
+  semesters?: string[];
+  onSemesterChange?: (semester: string) => void;
   onAcademicYearChange?: (year: string) => void;
   onAddClick?: () => void;
 }
 
 export function CalendarHeader({
   title,
-  month,
+  // month,
   academicYear,
   view,
   academicYears = [],
+  semester,
+  semesters = [],
+  onSemesterChange,
   onAcademicYearChange,
   onAddClick,
 }: CalendarHeaderProps) {
   return (
     <div className="no-print flex items-center justify-between pb-4 px-4">
       <h1 className="text-2xl font-semibold">
-        {title} - {month} {academicYear}
+        {title} Program - Academic Year {academicYear}
       </h1>
       <div className="flex items-center gap-2">
+        <Select
+          value={semester || ""}
+          onValueChange={onSemesterChange}
+          disabled={semesters.length === 0}
+        >
+          <SelectTrigger className="w-[140px]">
+            <SelectValue placeholder="Semester" />
+          </SelectTrigger>
+          <SelectContent>
+            {semesters.length > 0 ? (
+              semesters.map((sem) => (
+                <SelectItem key={sem} value={sem}>
+                  {sem}
+                </SelectItem>
+              ))
+            ) : (
+              <SelectItem value="1st Semester">Current Semester</SelectItem>
+            )}
+          </SelectContent>
+        </Select>
         <Select
           value={academicYear || ""}
           onValueChange={onAcademicYearChange}

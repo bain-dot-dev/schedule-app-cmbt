@@ -1,10 +1,460 @@
+// "use client";
+
+// import { useState, useEffect } from "react";
+// import { useForm } from "react-hook-form";
+// import { zodResolver } from "@hookform/resolvers/zod";
+// import { CalendarIcon } from "lucide-react";
+// import { toast } from "sonner";
+// import { Button } from "@/components/ui/button";
+// import {
+//   Dialog,
+//   DialogContent,
+//   DialogDescription,
+//   DialogHeader,
+//   DialogTitle,
+// } from "@/components/ui/dialog";
+// import {
+//   Form,
+//   FormControl,
+//   FormField,
+//   FormItem,
+//   FormLabel,
+//   FormMessage,
+// } from "@/components/ui/form";
+// import {
+//   Select,
+//   SelectContent,
+//   SelectItem,
+//   SelectTrigger,
+//   SelectValue,
+// } from "@/components/ui/select";
+// import { Input } from "@/components/ui/input";
+// import { ScheduleFormValues, scheduleFormSchema } from "@/schemas/schedule.schema";
+
+// // Sample data - replace with API calls
+// const sampleData = {
+//   faculty: [
+//     { id: "K.FERNANDEZ", name: "K. Fernandez" },
+//     { id: "J.SMITH", name: "J. Smith" },
+//     { id: "M.JOHNSON", name: "M. Johnson" },
+//   ],
+//   subjects: [
+//     { id: "HMPE 3", name: "HMPE 3" },
+//     { id: "MATH 101", name: "MATH 101" },
+//     { id: "CS 201", name: "CS 201" },
+//   ],
+//   sections: [
+//     { id: "BSHM 2D", name: "BSHM 2D" },
+//     { id: "BSCS 1A", name: "BSCS 1A" },
+//     { id: "BSIT 3B", name: "BSIT 3B" },
+//   ],
+//   rooms: [
+//     { id: "101 Laboratory", name: "101 Laboratory" },
+//     { id: "102 Lecture", name: "102 Lecture" },
+//     { id: "201 Computer Lab", name: "201 Computer Lab" },
+//   ],
+//   days: [
+//     { id: "MON", name: "Monday" },
+//     { id: "TUE", name: "Tuesday" },
+//     { id: "WED", name: "Wednesday" },
+//     { id: "THU", name: "Thursday" },
+//     { id: "FRI", name: "Friday" },
+//     { id: "SAT", name: "Saturday" },
+//     { id: "SUN", name: "Sunday" },
+//   ],
+//   academicYears: [
+//     { id: "2023-2024", name: "2023-2024" },
+//     { id: "2024-2025", name: "2024-2025" },
+//   ],
+// };
+
+// interface ScheduleModalProps {
+//   isOpen: boolean;
+//   onClose: () => void;
+//   schedule?: {
+//     id?: string | number;
+//     course: string;
+//     section: string;
+//     instructor: string;
+//     room: string;
+//     academicYear?: string;
+//     day: string;
+//     startTime: string;
+//     endTime: string;
+//   } | null;
+//   currentAcademicYear?: string;
+// }
+
+// export function ScheduleModal({
+//   isOpen,
+//   onClose,
+//   schedule,
+//   currentAcademicYear = "2024-2025",
+// }: ScheduleModalProps) {
+//   const [isSubmitting, setIsSubmitting] = useState(false);
+//   const isEditMode = !!schedule?.id;
+
+//   const form = useForm<ScheduleFormValues>({
+//     resolver: zodResolver(scheduleFormSchema),
+//     defaultValues: {
+//       faculty: "",
+//       subject: "",
+//       section: "",
+//       room: "",
+//       academicYear: currentAcademicYear || "2024-2025",
+//       day: "",
+//       startTime: "",
+//       endTime: "",
+//     },
+//   });
+
+//   // Update form values when schedule data changes (for edit mode)
+//   useEffect(() => {
+//     if (schedule) {
+//       form.reset({
+//         faculty: schedule.instructor || "",
+//         subject: schedule.course || "",
+//         section: schedule.section || "",
+//         room: schedule.room || "",
+//         academicYear:
+//           schedule.academicYear || currentAcademicYear || "2024-2025",
+//         day: schedule.day || "",
+//         startTime: schedule.startTime || "",
+//         endTime: schedule.endTime || "",
+//       });
+//     } else {
+//       form.reset({
+//         faculty: "",
+//         subject: "",
+//         section: "",
+//         room: "",
+//         academicYear: currentAcademicYear || "2024-2025",
+//         day: "",
+//         startTime: "",
+//         endTime: "",
+//       });
+//     }
+//   }, [schedule, form, currentAcademicYear]);
+
+//   const onSubmit = async (data: ScheduleFormValues) => {
+//     setIsSubmitting(true);
+//     try {
+//       // Format the data to match your API expectations
+//       const formattedData = {
+//         id: schedule?.id,
+//         course: data.subject,
+//         section: data.section,
+//         instructor: data.faculty,
+//         room: data.room,
+//         academicYear: data.academicYear,
+//         day: data.day,
+//         startTime: data.startTime,
+//         endTime: data.endTime,
+//       };
+
+//       if (isEditMode && schedule?.id) {
+//         // PUT request to update existing schedule
+//         const response = await fetch(`/api/schedules/${schedule.id}`, {
+//           method: "PUT",
+//           headers: {
+//             "Content-Type": "application/json",
+//           },
+//           body: JSON.stringify(formattedData),
+//         });
+
+//         if (!response.ok) {
+//           throw new Error("Failed to update schedule");
+//         }
+
+//         toast.success("Schedule updated", {
+//           description: "Schedule has been updated successfully.",
+//         });
+//       } else {
+//         // POST request to create new schedule
+//         const response = await fetch("/api/schedules", {
+//           method: "POST",
+//           headers: {
+//             "Content-Type": "application/json",
+//           },
+//           body: JSON.stringify(formattedData),
+//         });
+
+//         if (!response.ok) {
+//           throw new Error("Failed to create schedule");
+//         }
+
+//         toast.success("Schedule created", {
+//           description: "New schedule has been created successfully.",
+//         });
+//       }
+
+//       onClose();
+//       form.reset();
+//     } catch (error) {
+//       console.error("Error submitting schedule:", error);
+//       toast.error("Error", {
+//         description:
+//           error instanceof Error ? error.message : "An error occurred",
+//       });
+//     } finally {
+//       setIsSubmitting(false);
+//     }
+//   };
+
+//   return (
+//     <Dialog open={isOpen} onOpenChange={onClose}>
+//       <DialogContent className="sm:max-w-[500px]">
+//         <DialogHeader className="flex flex-row items-center justify-between">
+//           <div className="flex items-center gap-3">
+//             <div className="flex h-10 w-10 items-center justify-center rounded-full border">
+//               <CalendarIcon className="h-5 w-5" />
+//             </div>
+//             <div>
+//               <DialogTitle className="text-xl">
+//                 {isEditMode ? "Edit Schedule" : "Create Schedule"}
+//               </DialogTitle>
+//               <DialogDescription>
+//                 Fill in the data below to {isEditMode ? "edit" : "add a"}{" "}
+//                 schedule
+//               </DialogDescription>
+//             </div>
+//           </div>
+//         </DialogHeader>
+
+//         <Form {...form}>
+//           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+//             <div className="grid grid-cols-2 gap-4">
+//               <FormField
+//                 control={form.control}
+//                 name="faculty"
+//                 render={({ field }) => (
+//                   <FormItem>
+//                     <FormLabel>Faculty</FormLabel>
+//                     <Select
+//                       onValueChange={field.onChange}
+//                       defaultValue={field.value}
+//                       value={field.value}
+//                     >
+//                       <FormControl>
+//                         <SelectTrigger>
+//                           <SelectValue placeholder="Select faculty" />
+//                         </SelectTrigger>
+//                       </FormControl>
+//                       <SelectContent>
+//                         {sampleData.faculty.map((faculty) => (
+//                           <SelectItem key={faculty.id} value={faculty.id}>
+//                             {faculty.name}
+//                           </SelectItem>
+//                         ))}
+//                       </SelectContent>
+//                     </Select>
+//                     <FormMessage />
+//                   </FormItem>
+//                 )}
+//               />
+
+//               <FormField
+//                 control={form.control}
+//                 name="subject"
+//                 render={({ field }) => (
+//                   <FormItem>
+//                     <FormLabel>Subject</FormLabel>
+//                     <Select
+//                       onValueChange={field.onChange}
+//                       defaultValue={field.value}
+//                       value={field.value}
+//                     >
+//                       <FormControl>
+//                         <SelectTrigger>
+//                           <SelectValue placeholder="Select subject" />
+//                         </SelectTrigger>
+//                       </FormControl>
+//                       <SelectContent>
+//                         {sampleData.subjects.map((subject) => (
+//                           <SelectItem key={subject.id} value={subject.id}>
+//                             {subject.name}
+//                           </SelectItem>
+//                         ))}
+//                       </SelectContent>
+//                     </Select>
+//                     <FormMessage />
+//                   </FormItem>
+//                 )}
+//               />
+
+//               <FormField
+//                 control={form.control}
+//                 name="section"
+//                 render={({ field }) => (
+//                   <FormItem>
+//                     <FormLabel>Section</FormLabel>
+//                     <Select
+//                       onValueChange={field.onChange}
+//                       defaultValue={field.value}
+//                       value={field.value}
+//                     >
+//                       <FormControl>
+//                         <SelectTrigger>
+//                           <SelectValue placeholder="Select section" />
+//                         </SelectTrigger>
+//                       </FormControl>
+//                       <SelectContent>
+//                         {sampleData.sections.map((section) => (
+//                           <SelectItem key={section.id} value={section.id}>
+//                             {section.name}
+//                           </SelectItem>
+//                         ))}
+//                       </SelectContent>
+//                     </Select>
+//                     <FormMessage />
+//                   </FormItem>
+//                 )}
+//               />
+
+//               <FormField
+//                 control={form.control}
+//                 name="room"
+//                 render={({ field }) => (
+//                   <FormItem>
+//                     <FormLabel>Room</FormLabel>
+//                     <Select
+//                       onValueChange={field.onChange}
+//                       defaultValue={field.value}
+//                       value={field.value}
+//                     >
+//                       <FormControl>
+//                         <SelectTrigger>
+//                           <SelectValue placeholder="Select room" />
+//                         </SelectTrigger>
+//                       </FormControl>
+//                       <SelectContent>
+//                         {sampleData.rooms.map((room) => (
+//                           <SelectItem key={room.id} value={room.id}>
+//                             {room.name}
+//                           </SelectItem>
+//                         ))}
+//                       </SelectContent>
+//                     </Select>
+//                     <FormMessage />
+//                   </FormItem>
+//                 )}
+//               />
+
+//               <FormField
+//                 control={form.control}
+//                 name="academicYear"
+//                 render={({ field }) => (
+//                   <FormItem>
+//                     <FormLabel>Academic year</FormLabel>
+//                     <Select
+//                       onValueChange={field.onChange}
+//                       defaultValue={field.value}
+//                       value={field.value}
+//                     >
+//                       <FormControl>
+//                         <SelectTrigger>
+//                           <SelectValue placeholder="YYYY-YYYY" />
+//                         </SelectTrigger>
+//                       </FormControl>
+//                       <SelectContent>
+//                         {sampleData.academicYears.map((year) => (
+//                           <SelectItem key={year.id} value={year.id}>
+//                             {year.name}
+//                           </SelectItem>
+//                         ))}
+//                       </SelectContent>
+//                     </Select>
+//                     <FormMessage />
+//                   </FormItem>
+//                 )}
+//               />
+
+//               <FormField
+//                 control={form.control}
+//                 name="day"
+//                 render={({ field }) => (
+//                   <FormItem>
+//                     <FormLabel>Day</FormLabel>
+//                     <Select
+//                       onValueChange={field.onChange}
+//                       defaultValue={field.value}
+//                       value={field.value}
+//                     >
+//                       <FormControl>
+//                         <SelectTrigger>
+//                           <SelectValue placeholder="Select day" />
+//                         </SelectTrigger>
+//                       </FormControl>
+//                       <SelectContent>
+//                         {sampleData.days.map((day) => (
+//                           <SelectItem key={day.id} value={day.id}>
+//                             {day.name}
+//                           </SelectItem>
+//                         ))}
+//                       </SelectContent>
+//                     </Select>
+//                     <FormMessage />
+//                   </FormItem>
+//                 )}
+//               />
+
+//               <FormField
+//                 control={form.control}
+//                 name="startTime"
+//                 render={({ field }) => (
+//                   <FormItem>
+//                     <FormLabel>Start time</FormLabel>
+//                     <FormControl>
+//                       <Input placeholder="e.g. 8:00 AM" {...field} />
+//                     </FormControl>
+//                     <FormMessage />
+//                   </FormItem>
+//                 )}
+//               />
+
+//               <FormField
+//                 control={form.control}
+//                 name="endTime"
+//                 render={({ field }) => (
+//                   <FormItem>
+//                     <FormLabel>End time</FormLabel>
+//                     <FormControl>
+//                       <Input placeholder="e.g. 10:00 AM" {...field} />
+//                     </FormControl>
+//                     <FormMessage />
+//                   </FormItem>
+//                 )}
+//               />
+//             </div>
+
+//             <div className="flex justify-end gap-2 pt-4">
+//               <Button
+//                 type="button"
+//                 variant="outline"
+//                 onClick={() => form.reset()}
+//                 disabled={isSubmitting}
+//               >
+//                 Clear
+//               </Button>
+//               <Button type="submit" disabled={isSubmitting}>
+//                 {isSubmitting ? "Saving..." : "Save"}
+//               </Button>
+//             </div>
+//           </form>
+//         </Form>
+//       </DialogContent>
+//     </Dialog>
+//   );
+// }
+
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
+import { CalendarClock } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { CalendarIcon } from "lucide-react";
 import { toast } from "sonner";
+import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -29,141 +479,247 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
-import { ScheduleFormValues, scheduleFormSchema } from "@/schemas/schedule.schema";
+import scheduleFormSchema from "@/schemas/schedule.schema";
+import { FacultyViewValues } from "@/schemas/faculty.schema";
+import { SubjectViewValues } from "@/schemas/subject.schema";
+import { SectionCourseViewValues } from "@/schemas/sectionCourse.schema";
+import { RoomViewValues } from "@/schemas/room.schema";
 
-// Sample data - replace with API calls
-const sampleData = {
-  faculty: [
-    { id: "K.FERNANDEZ", name: "K. Fernandez" },
-    { id: "J.SMITH", name: "J. Smith" },
-    { id: "M.JOHNSON", name: "M. Johnson" },
-  ],
-  subjects: [
-    { id: "HMPE 3", name: "HMPE 3" },
-    { id: "MATH 101", name: "MATH 101" },
-    { id: "CS 201", name: "CS 201" },
-  ],
-  sections: [
-    { id: "BSHM 2D", name: "BSHM 2D" },
-    { id: "BSCS 1A", name: "BSCS 1A" },
-    { id: "BSIT 3B", name: "BSIT 3B" },
-  ],
-  rooms: [
-    { id: "101 Laboratory", name: "101 Laboratory" },
-    { id: "102 Lecture", name: "102 Lecture" },
-    { id: "201 Computer Lab", name: "201 Computer Lab" },
-  ],
-  days: [
-    { id: "MON", name: "Monday" },
-    { id: "TUE", name: "Tuesday" },
-    { id: "WED", name: "Wednesday" },
-    { id: "THU", name: "Thursday" },
-    { id: "FRI", name: "Friday" },
-    { id: "SAT", name: "Saturday" },
-    { id: "SUN", name: "Sunday" },
-  ],
-  academicYears: [
-    { id: "2023-2024", name: "2023-2024" },
-    { id: "2024-2025", name: "2024-2025" },
-  ],
-};
+// Define the form schema with validation
+// const scheduleFormSchema = z.object({
+//   day: z.string().min(1, { message: "Day is required" }),
+//   startTime: z.string().min(1, { message: "Start time is required" }),
+//   endTime: z.string().min(1, { message: "End time is required" }),
+//   subject: z.string().min(1, { message: "Subject is required" }),
+//   section: z.string().min(1, { message: "Section is required" }),
+//   faculty: z.string().min(1, { message: "Faculty is required" }),
+//   room: z.string().min(1, { message: "Room is required" }),
+//   academicYear: z.string().min(1, { message: "Academic year is required" }),
+//   semester: z.string().min(1, { message: "Semester is required" }),
+// });
+
+interface ScheduleValues {
+  id?: string | number;
+  day: string;
+  startTime: string;
+  endTime: string;
+  subject: string;
+  sectionCourse: string;
+  faculty: string;
+  room: string;
+  academicYear: string;
+  semester: string;
+  instructor: string; // Added this property
+}
+
+// Define the type based on the schema
+type ScheduleFormValues = z.infer<typeof scheduleFormSchema>;
 
 interface ScheduleModalProps {
   isOpen: boolean;
   onClose: () => void;
-  schedule?: {
-    id?: string | number;
-    course: string;
-    section: string;
-    instructor: string;
-    room: string;
-    academicYear?: string;
-    day: string;
-    startTime: string;
-    endTime: string;
-  } | null;
-  currentAcademicYear?: string;
+  schedule?: ScheduleValues;
+  currentAcademicYear: string;
 }
 
 export function ScheduleModal({
   isOpen,
   onClose,
   schedule,
-  currentAcademicYear = "2024-2025",
+  currentAcademicYear,
 }: ScheduleModalProps) {
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const isEditMode = !!schedule?.id;
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [faculties, setFaculties] = useState<FacultyViewValues[]>([]);
+  const [subjects, setSubjects] = useState<SubjectViewValues[]>([]);
+  const [sections, setSections] = useState<SectionCourseViewValues[]>([]);
+  const [rooms, setRooms] = useState<RoomViewValues[]>([]);
+  // const [academicYears, setAcademicYears] = useState<any[]>([])
 
+  // Initialize the form with react-hook-form
   const form = useForm<ScheduleFormValues>({
     resolver: zodResolver(scheduleFormSchema),
     defaultValues: {
-      faculty: "",
-      subject: "",
-      section: "",
-      room: "",
-      academicYear: currentAcademicYear || "2024-2025",
       day: "",
       startTime: "",
       endTime: "",
+      subject: "",
+      sectionCourse: "",
+      faculty: "",
+      room: "",
+      academicYear: currentAcademicYear || "",
+      semester: "First_Semester",
     },
   });
+
+  useEffect(() => {
+    console.log(form.formState.errors);
+  }, [form.formState.errors]);
+
+  // Fetch faculties data
+  const fetchFaculties = useCallback(async () => {
+    try {
+      const response = await fetch("/api/faculty-list");
+      if (!response.ok) {
+        throw new Error("Failed to fetch faculties");
+      }
+      const data = await response.json();
+      setFaculties(data);
+    } catch (error) {
+      console.error("Error fetching faculties:", error);
+    }
+  }, []);
+
+  // Fetch subjects data
+  const fetchSubjects = useCallback(async () => {
+    try {
+      const response = await fetch("/api/subject-list");
+      if (!response.ok) {
+        throw new Error("Failed to fetch subjects");
+      }
+      const data = await response.json();
+      setSubjects(data);
+    } catch (error) {
+      console.error("Error fetching subjects:", error);
+    }
+  }, []);
+
+  // Fetch sections data
+  const fetchSections = useCallback(async () => {
+    try {
+      const response = await fetch("/api/section-list");
+      if (!response.ok) {
+        throw new Error("Failed to fetch sections");
+      }
+      const data = await response.json();
+      setSections(data);
+    } catch (error) {
+      console.error("Error fetching sections:", error);
+    }
+  }, []);
+
+  // Fetch rooms data
+  const fetchRooms = useCallback(async () => {
+    try {
+      const response = await fetch("/api/room-list");
+      if (!response.ok) {
+        throw new Error("Failed to fetch rooms");
+      }
+      const data = await response.json();
+      setRooms(data);
+    } catch (error) {
+      console.error("Error fetching rooms:", error);
+    }
+  }, []);
+
+  // // Fetch academic years data
+  // const fetchAcademicYears = useCallback(async () => {
+  //   try {
+  //     const response = await fetch("/api/academic-year")
+  //     if (!response.ok) {
+  //       throw new Error("Failed to fetch academic years")
+  //     }
+  //     const data = await response.json()
+  //     setAcademicYears(data)
+  //   } catch (error) {
+  //     console.error("Error fetching academic years:", error)
+  //     // Use default academic years if API fails
+  //     setAcademicYears([
+  //       { academicYearID: "2023-2024", academicYear: "2023-2024" },
+  //       { academicYearID: "2024-2025", academicYear: "2024-2025" },
+  //       { academicYearID: "2025-2026", academicYear: "2025-2026" },
+  //     ])
+  //   }
+  // }, [])
+
+  // Fetch all required data when modal opens
+  useEffect(() => {
+    if (isOpen) {
+      fetchFaculties();
+      fetchSubjects();
+      fetchSections();
+      fetchRooms();
+      // fetchAcademicYears()
+    }
+  }, [isOpen, fetchFaculties, fetchSubjects, fetchSections, fetchRooms]);
 
   // Update form values when schedule data changes (for edit mode)
   useEffect(() => {
     if (schedule) {
+      // Find the IDs from the related entities
+      const facultyId =
+        faculties.find(
+          (f) => `${f.firstName} ${f.lastName}` === schedule.instructor
+        )?.facultyID || "";
+
+      const subjectId =
+        subjects.find((s) => s.subjectCode === schedule.subject)?.subjectID ||
+        "";
+
+      const sectionId =
+        sections.find((s) => s.section.sectionName === schedule.sectionCourse)
+          ?.sectionCourseID || "";
+
+      const roomId =
+        rooms.find((r) => r.roomNumber === schedule.room)?.roomID || "";
+
+      // const academicYearId =
+      //   academicYears.find((a) => a.academicYear === schedule.academicYear)?.academicYearID ||
+      //   schedule.academicYear ||
+      //   ""
+      const academicYear = schedule.academicYear || "";
+
       form.reset({
-        faculty: schedule.instructor || "",
-        subject: schedule.course || "",
-        section: schedule.section || "",
-        room: schedule.room || "",
-        academicYear:
-          schedule.academicYear || currentAcademicYear || "2024-2025",
         day: schedule.day || "",
         startTime: schedule.startTime || "",
         endTime: schedule.endTime || "",
+        subject: subjectId,
+        sectionCourse: sectionId,
+        faculty: facultyId,
+        room: roomId,
+        academicYear: academicYear,
+        semester: schedule.semester || "First_Semester",
       });
     } else {
       form.reset({
-        faculty: "",
-        subject: "",
-        section: "",
-        room: "",
-        academicYear: currentAcademicYear || "2024-2025",
         day: "",
         startTime: "",
         endTime: "",
+        subject: "",
+        sectionCourse: "",
+        faculty: "",
+        room: "",
+        academicYear: currentAcademicYear || "",
+        semester: "First_Semester",
       });
     }
-  }, [schedule, form, currentAcademicYear]);
+  }, [
+    schedule,
+    form,
+    currentAcademicYear,
+    faculties,
+    subjects,
+    sections,
+    rooms,
+  ]);
 
+  // Handle form submission
   const onSubmit = async (data: ScheduleFormValues) => {
     setIsSubmitting(true);
     try {
-      // Format the data to match your API expectations
-      const formattedData = {
-        id: schedule?.id,
-        course: data.subject,
-        section: data.section,
-        instructor: data.faculty,
-        room: data.room,
-        academicYear: data.academicYear,
-        day: data.day,
-        startTime: data.startTime,
-        endTime: data.endTime,
-      };
-
-      if (isEditMode && schedule?.id) {
+      if (isEditMode) {
         // PUT request to update existing schedule
         const response = await fetch(`/api/schedules/${schedule.id}`, {
           method: "PUT",
           headers: {
             "Content-Type": "application/json",
           },
-          body: JSON.stringify(formattedData),
+          body: JSON.stringify(data),
         });
 
         if (!response.ok) {
-          throw new Error("Failed to update schedule");
+          const errorData = await response.json();
+          throw new Error(errorData.error || "Failed to update schedule");
         }
 
         toast.success("Schedule updated", {
@@ -176,22 +732,24 @@ export function ScheduleModal({
           headers: {
             "Content-Type": "application/json",
           },
-          body: JSON.stringify(formattedData),
+          body: JSON.stringify(data),
         });
 
         if (!response.ok) {
-          throw new Error("Failed to create schedule");
+          const errorData = await response.json();
+          throw new Error(errorData.error || "Failed to add schedule");
         }
 
-        toast.success("Schedule created", {
-          description: "New schedule has been created successfully.",
+        toast.success("Schedule added", {
+          description: "New schedule has been added successfully.",
         });
       }
 
+      // Close the modal and reset form
       onClose();
       form.reset();
     } catch (error) {
-      console.error("Error submitting schedule:", error);
+      console.error("Error submitting schedule data:", error);
       toast.error("Error", {
         description:
           error instanceof Error ? error.message : "An error occurred",
@@ -201,20 +759,75 @@ export function ScheduleModal({
     }
   };
 
+  // Handle form clearing
+  const handleClear = () => {
+    form.reset();
+  };
+
+  // Time options for select dropdowns
+  const timeOptions = [
+    "7:00 AM",
+    "7:30 AM",
+    "8:00 AM",
+    "8:30 AM",
+    "9:00 AM",
+    "9:30 AM",
+    "10:00 AM",
+    "10:30 AM",
+    "11:00 AM",
+    "11:30 AM",
+    "12:00 PM",
+    "12:30 PM",
+    "1:00 PM",
+    "1:30 PM",
+    "2:00 PM",
+    "2:30 PM",
+    "3:00 PM",
+    "3:30 PM",
+    "4:00 PM",
+    "4:30 PM",
+    "5:00 PM",
+    "5:30 PM",
+    "6:00 PM",
+  ];
+
+  // Day options
+  const dayOptions = [
+    { value: "MON", label: "Monday" },
+    { value: "TUE", label: "Tuesday" },
+    { value: "WED", label: "Wednesday" },
+    { value: "THU", label: "Thursday" },
+    { value: "FRI", label: "Friday" },
+    { value: "SAT", label: "Saturday" },
+    { value: "SUN", label: "Sunday" },
+  ];
+
+  // Academic year options (fallback if API fails)
+  // const academicYearOptions =
+  //   academicYears.length > 0
+  //     ? academicYears
+  //     : ["2023-2024", "2024-2025", "2025-2026", "2026-2027"].map((year) => ({
+  //         academicYearID: year,
+  //         academicYear: year,
+  //       }))
+
+  // Semester options
+  const semesterOptions = ["First_Semester", "Second_Semester", "Summer"];
+
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[500px]">
+      <DialogContent className="sm:max-w-[600px]">
         <DialogHeader className="flex flex-row items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-full border">
-              <CalendarIcon className="h-5 w-5" />
+              <CalendarClock className="h-5 w-5" />
             </div>
             <div>
               <DialogTitle className="text-xl">
-                {isEditMode ? "Edit Schedule" : "Create Schedule"}
+                {isEditMode ? "Edit Schedule" : "Add Schedule"}
               </DialogTitle>
               <DialogDescription>
-                Fill in the data below to {isEditMode ? "edit" : "add a"}{" "}
+                Fill in the data below to {isEditMode ? "edit" : "add"} a
                 schedule
               </DialogDescription>
             </div>
@@ -223,6 +836,146 @@ export function ScheduleModal({
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="academicYear"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Academic Year</FormLabel>
+                    <FormControl>
+                      <Input placeholder="e.g., 2024-2025" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="semester"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Semester</FormLabel>
+                    <Select
+                      onValueChange={field.onChange}
+                      defaultValue={field.value}
+                      value={field.value}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select semester" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {semesterOptions.map((semester) => (
+                          <SelectItem
+                            key={`semester-${semester}`}
+                            value={semester}
+                          >
+                            {semester}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+
+            <div className="grid grid-cols-3 gap-4">
+              <FormField
+                control={form.control}
+                name="day"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Day</FormLabel>
+                    <Select
+                      onValueChange={field.onChange}
+                      defaultValue={field.value}
+                      value={field.value}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select day" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {dayOptions.map((day) => (
+                          <SelectItem
+                            key={`day-${day.value}`}
+                            value={day.value}
+                          >
+                            {day.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="startTime"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Start Time</FormLabel>
+                    <Select
+                      onValueChange={field.onChange}
+                      defaultValue={field.value}
+                      value={field.value}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select start time" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {timeOptions.map((time) => (
+                          <SelectItem key={`start-${time}`} value={time}>
+                            {time}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="endTime"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>End Time</FormLabel>
+                    <Select
+                      onValueChange={field.onChange}
+                      defaultValue={field.value}
+                      value={field.value}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select end time" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {timeOptions.map((time) => (
+                          <SelectItem key={`end-${time}`} value={time}>
+                            {time}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+
             <div className="grid grid-cols-2 gap-4">
               <FormField
                 control={form.control}
@@ -241,67 +994,18 @@ export function ScheduleModal({
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        {sampleData.faculty.map((faculty) => (
-                          <SelectItem key={faculty.id} value={faculty.id}>
-                            {faculty.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="subject"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Subject</FormLabel>
-                    <Select
-                      onValueChange={field.onChange}
-                      defaultValue={field.value}
-                      value={field.value}
-                    >
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select subject" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {sampleData.subjects.map((subject) => (
-                          <SelectItem key={subject.id} value={subject.id}>
-                            {subject.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="section"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Section</FormLabel>
-                    <Select
-                      onValueChange={field.onChange}
-                      defaultValue={field.value}
-                      value={field.value}
-                    >
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select section" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {sampleData.sections.map((section) => (
-                          <SelectItem key={section.id} value={section.id}>
-                            {section.name}
+                        {faculties.map((faculty) => (
+                          <SelectItem
+                            key={`faculty-${faculty.facultyID}`}
+                            value={faculty.facultyID}
+                          >
+                            {[
+                              faculty.firstName,
+                              faculty.middleName,
+                              faculty.lastName,
+                            ]
+                              .filter(Boolean) // Removes `undefined` or empty values
+                              .join(" ")}
                           </SelectItem>
                         ))}
                       </SelectContent>
@@ -328,9 +1032,12 @@ export function ScheduleModal({
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        {sampleData.rooms.map((room) => (
-                          <SelectItem key={room.id} value={room.id}>
-                            {room.name}
+                        {rooms.map((room) => (
+                          <SelectItem
+                            key={`room-${room.roomID}`}
+                            value={room.roomID}
+                          >
+                            {room.roomNumber} {""} {room.type}
                           </SelectItem>
                         ))}
                       </SelectContent>
@@ -339,13 +1046,15 @@ export function ScheduleModal({
                   </FormItem>
                 )}
               />
+            </div>
 
+            <div className="grid grid-cols-2 gap-4">
               <FormField
                 control={form.control}
-                name="academicYear"
+                name="subject"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Academic year</FormLabel>
+                    <FormLabel>Subject</FormLabel>
                     <Select
                       onValueChange={field.onChange}
                       defaultValue={field.value}
@@ -353,13 +1062,16 @@ export function ScheduleModal({
                     >
                       <FormControl>
                         <SelectTrigger>
-                          <SelectValue placeholder="YYYY-YYYY" />
+                          <SelectValue placeholder="Select subject" />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        {sampleData.academicYears.map((year) => (
-                          <SelectItem key={year.id} value={year.id}>
-                            {year.name}
+                        {subjects.map((subject) => (
+                          <SelectItem
+                            key={`subject-${subject.subjectID}`}
+                            value={subject.subjectID}
+                          >
+                            {subject.subjectName}
                           </SelectItem>
                         ))}
                       </SelectContent>
@@ -371,56 +1083,37 @@ export function ScheduleModal({
 
               <FormField
                 control={form.control}
-                name="day"
+                name="sectionCourse"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Day</FormLabel>
-                    <Select
-                      onValueChange={field.onChange}
-                      defaultValue={field.value}
-                      value={field.value}
-                    >
+                    <FormLabel>Section</FormLabel>
+                    <Select onValueChange={field.onChange} value={field.value}>
                       <FormControl>
                         <SelectTrigger>
-                          <SelectValue placeholder="Select day" />
+                          <SelectValue placeholder="Select section" />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        {sampleData.days.map((day) => (
-                          <SelectItem key={day.id} value={day.id}>
-                            {day.name}
+                        {sections.map((sectionCourse, index) => (
+                          <SelectItem
+                            key={`section-${
+                              sectionCourse.sectionCourseID || index
+                            }`}
+                            value={
+                              sectionCourse.sectionCourseID ||
+                              `section-${index}`
+                            }
+                          >
+                            {sectionCourse.section?.sectionName ||
+                              "Unknown Section"}{" "}
+                            {""}{" "}
+                            {sectionCourse.courseProgram?.courseProgram ||
+                              "Unknown Course"}
                           </SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
 
-              <FormField
-                control={form.control}
-                name="startTime"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Start time</FormLabel>
-                    <FormControl>
-                      <Input placeholder="e.g. 8:00 AM" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="endTime"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>End time</FormLabel>
-                    <FormControl>
-                      <Input placeholder="e.g. 10:00 AM" {...field} />
-                    </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -431,7 +1124,7 @@ export function ScheduleModal({
               <Button
                 type="button"
                 variant="outline"
-                onClick={() => form.reset()}
+                onClick={handleClear}
                 disabled={isSubmitting}
               >
                 Clear
