@@ -381,7 +381,7 @@
 //   }
 // }
 
-import { NextResponse } from "next/server"
+import { NextResponse } from "next/server";
 import { PrismaClient } from "@prisma/client";
 import type { SemesterEnum } from "@prisma/client";
 
@@ -397,8 +397,8 @@ function dayToNumber(day: string): number {
     THU: 4,
     FRI: 5,
     SAT: 6,
-  }
-  return dayMap[day] || 0
+  };
+  return dayMap[day] || 0;
 }
 
 // Helper function to convert number to day string
@@ -411,39 +411,39 @@ function numberToDay(day: number): string {
     4: "THU",
     5: "FRI",
     6: "SAT",
-  }
-  return dayMap[day] || "MON"
+  };
+  return dayMap[day] || "MON";
 }
 
 // Helper function to parse time string to Date object
 function parseTimeString(timeStr: string, baseDate: Date = new Date()): Date {
-  const [time, period] = timeStr.split(" ")
-  let [hours, minutes] = time.split(":").map(Number)
+  const [time, period] = timeStr.split(" ");
+  let [hours, minutes] = time.split(":").map(Number);
 
   if (period === "PM" && hours !== 12) {
-    hours += 12
+    hours += 12;
   } else if (period === "AM" && hours === 12) {
-    hours = 0
+    hours = 0;
   }
 
-  const result = new Date(baseDate)
-  result.setHours(hours, minutes, 0, 0)
-  return result
+  const result = new Date(baseDate);
+  result.setHours(hours, minutes, 0, 0);
+  return result;
 }
 
 // Helper function to format Date to time string
 function formatTimeString(date: Date): string {
-  let hours = date.getHours()
-  const minutes = date.getMinutes()
-  const period = hours >= 12 ? "PM" : "AM"
+  let hours = date.getHours();
+  const minutes = date.getMinutes();
+  const period = hours >= 12 ? "PM" : "AM";
 
   if (hours > 12) {
-    hours -= 12
+    hours -= 12;
   } else if (hours === 0) {
-    hours = 12
+    hours = 12;
   }
 
-  return `${hours}:${minutes.toString().padStart(2, "0")} ${period}`
+  return `${hours}:${minutes.toString().padStart(2, "0")} ${period}`;
 }
 
 // Transform database schedule to API response format
@@ -454,32 +454,39 @@ function transformSchedule(schedule: any) {
     startTime: formatTimeString(schedule.timeStart),
     endTime: formatTimeString(schedule.timeEnd),
     course: schedule.subject?.subjectCode || "",
-    section: schedule.section?.sectionName || "",
-    instructor: schedule.faculty?.firstName ? `${schedule.faculty.firstName} ${schedule.faculty.lastName}` : "",
-    room: schedule.room?.roomName || "",
-    academicYear: schedule.academicYear?.academicYear || "",
+    section: schedule.sectionCourse?.section?.sectionName || "",
+    instructor: schedule.faculty?.firstName
+      ? `${schedule.faculty.firstName} ${schedule.faculty.lastName}`
+      : "",
+    room: schedule.room?.roomNumber || "",
+    academicYear: schedule.academicYear?.academicYearName || "",
     semester: schedule.semester,
-  }
+  };
 }
 
 export async function GET(request: Request) {
   try {
     // Get query parameters
-    const { searchParams } = new URL(request.url)
-    const academicYear = searchParams.get("academicYear")
-    const semester = searchParams.get("semester")
+    const { searchParams } = new URL(request.url);
+    const academicYear = searchParams.get("academicYear");
+    const semester = searchParams.get("semester");
+    const facultyId = searchParams.get("facultyId");
 
     // Build query filters
-    const filters: any = {}
+    const filters: any = {};
 
     if (academicYear) {
       filters.academicYear = {
         academicYear: academicYear,
-      }
+      };
     }
 
     if (semester) {
-      filters.semester = semester as SemesterEnum
+      filters.semester = semester as SemesterEnum;
+    }
+
+    if (facultyId) {
+      filters.facultyID = facultyId;
     }
 
     // Fetch schedules with related data
@@ -488,19 +495,28 @@ export async function GET(request: Request) {
       include: {
         faculty: true,
         room: true,
-        sectionCourse: true,
+        sectionCourse: {
+          include: {
+            section: true,
+            courseProgram: true,
+          },
+        },
         subject: true,
         academicYear: true,
       },
-    })
+    });
 
+    // console.log("Fetched schedules:", schedules);
     // Transform data for API response
-    const transformedSchedules = schedules.map(transformSchedule)
+    const transformedSchedules = schedules.map(transformSchedule);
 
-    return NextResponse.json(transformedSchedules)
+    return NextResponse.json(transformedSchedules);
   } catch (error) {
-    console.error("Error fetching schedules:", error)
-    return NextResponse.json({ error: "Failed to fetch schedules" }, { status: 500 })
+    console.error("Error fetching schedules:", error);
+    return NextResponse.json(
+      { error: "Failed to fetch schedules" },
+      { status: 500 }
+    );
   }
 }
 

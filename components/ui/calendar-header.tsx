@@ -37,11 +37,18 @@ export function CalendarHeader({
   onAcademicYearChange,
   onAddClick,
 }: CalendarHeaderProps) {
+  const splitSemester = semester.replace(/_/g, " ");
+
   return (
-    <div className="no-print flex items-center justify-between pb-4 px-4">
-      <h1 className="text-2xl font-semibold">
-        {title} Program - Academic Year {academicYear}
-      </h1>
+    <div className="no-print flex flex-col lg:flex-row items-center justify-between pb-4 lg:px-4">
+      <div className="flex flex-col gap-1 text-lg lg:text-2xl font-medium lg:font-semibold pb-4 lg:pb-0">
+        <h1 className="">
+          {title} {view} Program
+        </h1>
+        <h1>
+          {splitSemester} Academic Year {academicYear}
+        </h1>
+      </div>
       <div className="flex items-center gap-2">
         <Select
           value={semester || ""}
@@ -55,7 +62,7 @@ export function CalendarHeader({
             {semesters.length > 0 ? (
               semesters.map((sem) => (
                 <SelectItem key={sem} value={sem}>
-                  {sem}
+                  {sem.replace(/_/g, " ")}
                 </SelectItem>
               ))
             ) : (
@@ -68,7 +75,7 @@ export function CalendarHeader({
           onValueChange={onAcademicYearChange}
           disabled={academicYears.length === 0}
         >
-          <SelectTrigger className="w-[140px]">
+          <SelectTrigger>
             <SelectValue placeholder="Academic Year" />
           </SelectTrigger>
           <SelectContent>
@@ -83,10 +90,10 @@ export function CalendarHeader({
             )}
           </SelectContent>
         </Select>
-        <div className="relative">
+        {/* <div className="relative">
           <Search className="absolute left-2 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input placeholder="Search..." className="w-[200px] pl-8" />
-        </div>
+        </div> */}
         <Button className="gap-2" onClick={onAddClick}>
           <Plus className="h-4 w-4" />
           Add Event

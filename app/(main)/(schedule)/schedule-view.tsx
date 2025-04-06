@@ -8,6 +8,7 @@
 
 // interface ScheduleViewProps {
 //   view: "rooms" | "faculty" | "sections";
+//   facultyId?: string | number;
 // }
 
 // // Helper function to convert time string to minutes since midnight
@@ -24,7 +25,7 @@
 //   return hours * 60 + minutes;
 // }
 
-// export function ScheduleView({ view }: ScheduleViewProps) {
+// export function ScheduleView({ view, facultyId }: ScheduleViewProps) {
 //   const [selectedAcademicYear, setSelectedAcademicYear] = useState<string>("");
 //   const [filteredSchedule, setFilteredSchedule] = useState<any[]>([]);
 //   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -33,10 +34,11 @@
 //   const [isLoading, setIsLoading] = useState(true);
 //   const [allSchedules, setAllSchedules] = useState<any[]>([]); // Store all schedules
 //   const [selectedSemester, setSelectedSemester] = useState<string>("");
+//   const [facultyName, setFacultyName] = useState<string>("");
 
 //   const viewTitles = {
 //     rooms: "Rooms",
-//     faculty: "Faculty",
+//     faculty: facultyId ? "Faculty Schedule" : "Faculty",
 //     sections: "Sections",
 //   };
 
@@ -60,6 +62,27 @@
 //     });
 //     return Array.from(semestersSet);
 //   }, [allSchedules]);
+
+//   // Fetch faculty name if facultyId is provided
+//   useEffect(() => {
+//     if (facultyId) {
+//       const fetchFacultyName = async () => {
+//         try {
+//           const response = await fetch(`/api/faculty/${facultyId}`);
+//           if (!response.ok) {
+//             throw new Error("Failed to fetch faculty details");
+//           }
+//           const data = await response.json();
+//           setFacultyName(`${data.firstName} ${data.lastName}`);
+//         } catch (error) {
+//           console.error("Error fetching faculty name:", error);
+//           setFacultyName("Unknown Faculty");
+//         }
+//       };
+
+//       fetchFacultyName();
+//     }
+//   }, [facultyId]);
 
 //   useEffect(() => {
 //     if (semesters.length > 0 && !selectedSemester) {
@@ -108,11 +131,18 @@
 //   const fetchAllSchedules = async () => {
 //     setIsLoading(true);
 //     try {
-//       const response = await fetch("/api/schedules");
+//       // Build the URL with query parameters if facultyId is provided
+//       let url = "/api/schedules";
+//       if (facultyId) {
+//         url += `?facultyId=${facultyId}`;
+//       }
+
+//       const response = await fetch(url);
 //       if (!response.ok) {
 //         throw new Error("Failed to fetch schedules");
 //       }
 //       const data = await response.json();
+//       console.log("Fetched schedules:", data);
 //       setAllSchedules(data); // Store all schedules
 //     } catch (error) {
 //       console.error("Error fetching schedules:", error);
@@ -120,14 +150,12 @@
 //     } finally {
 //       setIsLoading(false);
 //     }
-
-//     console.log("Fetched schedules:", allSchedules);
 //   };
 
 //   // Load schedules on component mount
 //   useEffect(() => {
 //     fetchAllSchedules();
-//   }, []);
+//   }, [facultyId]);
 
 //   // Handle academic year change
 //   const handleAcademicYearChange = (year: string) => {
@@ -176,30 +204,12 @@
 //     { day: "SAT", date: 8 },
 //   ];
 
-//   // Get current month name
-//   // const getCurrentMonth = () => {
-//   //   const months = [
-//   //     "January",
-//   //     "February",
-//   //     "March",
-//   //     "April",
-//   //     "May",
-//   //     "June",
-//   //     "July",
-//   //     "August",
-//   //     "September",
-//   //     "October",
-//   //     "November",
-//   //     "December",
-//   //   ]
-//   //   return months[new Date().getMonth()]
-//   // }
-
 //   return (
 //     <div className="flex h-full flex-col">
 //       <CalendarHeader
-//         title={viewTitles[view]}
-//         // month={getCurrentMonth()}
+//         title={
+//           facultyId && facultyName ? `${facultyName}'s ` : viewTitles[view]
+//         }
 //         academicYear={selectedAcademicYear}
 //         view={view}
 //         academicYears={uniqueAcademicYears}
@@ -210,8 +220,8 @@
 //         onAddClick={handleAddSchedule}
 //       />
 
-//       <div className="print-only flex-1 overflow-auto p-4">
-//         <div className="rounded-lg border bg-background bg-zircon-50">
+//       <div className="flex-1 overflow-auto p-4">
+//         <div className="rounded-lg border bg-background">
 //           {/* Week header */}
 //           <div className="grid grid-cols-[100px_repeat(7,1fr)] border-b">
 //             <div className="flex justify-center items-center border-r p-2 text-sm font-medium text-muted-foreground">
@@ -242,7 +252,7 @@
 //             )}
 //             {/* Time column */}
 //             <div className="border-r">
-//               {timeSlots.map((time, index) => (
+//               {timeSlots.map((time) => (
 //                 <div
 //                   key={time}
 //                   className="flex justify-center items-center border-b h-20 p-2 text-sm"
@@ -284,8 +294,8 @@
 //                         <ScheduleBlock
 //                           startTime={event.startTime}
 //                           endTime={event.endTime}
-//                           course={`${event.course}`}
-//                           section={`${event.section}`}
+//                           course={event.course}
+//                           section={event.section}
 //                           instructor={event.instructor}
 //                           room={event.room}
 //                           view={view}
@@ -323,168 +333,215 @@
 //   );
 // }
 
-"use client"
-import { useState, useEffect, useMemo } from "react"
-import { CalendarHeader } from "@/components/ui/calendar-header"
-import { ScheduleBlock } from "@/components/ui/schedule-block"
-import { ScheduleModal } from "@/components/schedule/schedule-modal"
-import { toast } from "sonner"
-import { Button } from "@/components/ui/button"
+"use client";
+import { useState, useEffect, useMemo } from "react";
+import { CalendarHeader } from "@/components/ui/calendar-header";
+import { ScheduleBlock } from "@/components/ui/schedule-block";
+import { ScheduleModal } from "@/components/schedule/schedule-modal";
+import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
 
 interface ScheduleViewProps {
-  view: "rooms" | "faculty" | "sections"
+  view: "rooms" | "faculty" | "sections";
+  facultyId?: string | number;
 }
 
 // Helper function to convert time string to minutes since midnight
 function timeToMinutes(timeStr: string): number {
-  const [time, period] = timeStr.split(" ")
-  let [hours, minutes] = time.split(":").map(Number)
+  const [time, period] = timeStr.split(" ");
+  let [hours, minutes] = time.split(":").map(Number);
 
   if (period === "PM" && hours !== 12) {
-    hours += 12
+    hours += 12;
   } else if (period === "AM" && hours === 12) {
-    hours = 0
+    hours = 0;
   }
 
-  return hours * 60 + minutes
+  return hours * 60 + minutes;
 }
 
-export function ScheduleView({ view }: ScheduleViewProps) {
-  const [selectedAcademicYear, setSelectedAcademicYear] = useState<string>("")
-  const [filteredSchedule, setFilteredSchedule] = useState<any[]>([])
-  const [isModalOpen, setIsModalOpen] = useState(false)
-  const [selectedSchedule, setSelectedSchedule] = useState<any>(null)
-  const [schedules, setSchedules] = useState<any[]>([])
-  const [isLoading, setIsLoading] = useState(true)
-  const [allSchedules, setAllSchedules] = useState<any[]>([]) // Store all schedules
-  const [selectedSemester, setSelectedSemester] = useState<string>("")
+export function ScheduleView({ view, facultyId }: ScheduleViewProps) {
+  const [selectedAcademicYear, setSelectedAcademicYear] = useState<string>("");
+  const [filteredSchedule, setFilteredSchedule] = useState<any[]>([]);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedSchedule, setSelectedSchedule] = useState<any>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [allSchedules, setAllSchedules] = useState<any[]>([]); // Store all schedules
+  const [selectedSemester, setSelectedSemester] = useState<string>("");
+  const [facultyName, setFacultyName] = useState<string>("");
+  const [dataInitialized, setDataInitialized] = useState(false);
 
   const viewTitles = {
     rooms: "Rooms",
-    faculty: "Faculty",
+    faculty: facultyId ? "Faculty Schedule" : "Faculty",
     sections: "Sections",
-  }
+  };
 
   // Extract unique academic years from ALL schedules data
   const uniqueAcademicYears = useMemo(() => {
-    const years = new Set<string>()
+    const years = new Set<string>();
     allSchedules.forEach((item) => {
       if (item.academicYear) {
-        years.add(item.academicYear)
+        years.add(item.academicYear);
       }
-    })
-    return Array.from(years)
-  }, [allSchedules])
+    });
+    return Array.from(years);
+  }, [allSchedules]);
 
   const semesters = useMemo(() => {
-    const semestersSet = new Set<string>()
+    const semestersSet = new Set<string>();
     allSchedules.forEach((item) => {
       if (item.semester) {
-        semestersSet.add(item.semester)
+        semestersSet.add(item.semester);
       }
-    })
-    return Array.from(semestersSet)
-  }, [allSchedules])
+    });
+    return Array.from(semestersSet);
+  }, [allSchedules]);
 
+  // Fetch faculty name if facultyId is provided
   useEffect(() => {
-    if (semesters.length > 0 && !selectedSemester) {
-      setSelectedSemester(semesters[0])
-    }
-  }, [semesters, selectedSemester])
+    if (facultyId) {
+      const fetchFacultyName = async () => {
+        try {
+          const response = await fetch(`/api/faculty/${facultyId}`);
+          if (!response.ok) {
+            throw new Error("Failed to fetch faculty details");
+          }
+          const data = await response.json();
+          setFacultyName(`${data.firstName} ${data.lastName}`);
+        } catch (error) {
+          console.error("Error fetching faculty name:", error);
+          setFacultyName("Unknown Faculty");
+        }
+      };
 
-  useEffect(() => {
-    if (selectedSemester && allSchedules.length > 0) {
-      const filtered = allSchedules.filter((item) => item.semester === selectedSemester)
-      setFilteredSchedule(filtered)
-      setSchedules(filtered) // Update the schedules state for rendering
-    } else {
-      setFilteredSchedule(allSchedules)
-      setSchedules(allSchedules)
+      fetchFacultyName();
     }
-  }, [selectedSemester, allSchedules])
-
-  // Set initial academic year
-  useEffect(() => {
-    if (uniqueAcademicYears.length > 0 && !selectedAcademicYear) {
-      setSelectedAcademicYear(uniqueAcademicYears[0])
-    } else if (uniqueAcademicYears.length === 0 && !isLoading) {
-      // If there are no academic years after loading, set a default
-      setSelectedAcademicYear("2024-2025")
-    }
-  }, [uniqueAcademicYears, selectedAcademicYear, isLoading])
-
-  // Filter schedule data when academic year changes
-  useEffect(() => {
-    if (selectedAcademicYear && allSchedules.length > 0) {
-      const filtered = allSchedules.filter((item) => item.academicYear === selectedAcademicYear)
-      setFilteredSchedule(filtered)
-      setSchedules(filtered) // Update the schedules state for rendering
-    } else {
-      setFilteredSchedule(allSchedules)
-      setSchedules(allSchedules)
-    }
-  }, [selectedAcademicYear, allSchedules])
+  }, [facultyId]);
 
   // Fetch ALL schedules from API (without filtering by year)
   const fetchAllSchedules = async () => {
-    setIsLoading(true)
+    setIsLoading(true);
     try {
-      const response = await fetch("/api/schedules")
-      if (!response.ok) {
-        throw new Error("Failed to fetch schedules")
+      // Build the URL with query parameters if facultyId is provided
+      let url = "/api/schedules";
+      if (facultyId) {
+        url += `?facultyId=${facultyId}`;
       }
-      const data = await response.json()
-      console.log("Fetched schedules:", data)
-      setAllSchedules(data) // Store all schedules
+
+      const response = await fetch(url);
+      if (!response.ok) {
+        throw new Error("Failed to fetch schedules");
+      }
+      const data = await response.json();
+      console.log("Fetched schedules:", data);
+      setAllSchedules(data); // Store all schedules
     } catch (error) {
-      console.error("Error fetching schedules:", error)
-      toast.error("Failed to load schedules")
+      console.error("Error fetching schedules:", error);
+      toast.error("Failed to load schedules");
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   // Load schedules on component mount
   useEffect(() => {
-    fetchAllSchedules()
-  }, [])
+    fetchAllSchedules();
+  }, [facultyId]);
+
+  // Initialize default semester and academic year after data is loaded
+  useEffect(() => {
+    if (!isLoading && allSchedules.length > 0 && !dataInitialized) {
+      // Set default semester if available
+      if (semesters.length > 0 && !selectedSemester) {
+        // Prefer "1st Semester" if available
+        const firstSemester = semesters.find((sem) => sem === "1st Semester");
+        setSelectedSemester(firstSemester || semesters[0]);
+      }
+
+      // Set default academic year if available
+      if (uniqueAcademicYears.length > 0 && !selectedAcademicYear) {
+        setSelectedAcademicYear(uniqueAcademicYears[0]);
+      } else if (uniqueAcademicYears.length === 0) {
+        setSelectedAcademicYear("2024-2025");
+      }
+
+      setDataInitialized(true);
+    }
+  }, [
+    isLoading,
+    allSchedules,
+    semesters,
+    uniqueAcademicYears,
+    selectedSemester,
+    selectedAcademicYear,
+    dataInitialized,
+  ]);
+
+  // Apply filters whenever filter criteria or data changes
+  useEffect(() => {
+    if (allSchedules.length === 0) return;
+
+    console.log("Applying filters:", {
+      semester: selectedSemester,
+      academicYear: selectedAcademicYear,
+      schedulesCount: allSchedules.length,
+    });
+
+    let filtered = [...allSchedules];
+
+    // Filter by semester if selected
+    if (selectedSemester) {
+      filtered = filtered.filter((item) => item.semester === selectedSemester);
+    }
+
+    // Filter by academic year if selected
+    if (selectedAcademicYear) {
+      filtered = filtered.filter(
+        (item) => item.academicYear === selectedAcademicYear
+      );
+    }
+
+    console.log("Filtered results:", filtered.length);
+    setFilteredSchedule(filtered);
+  }, [selectedSemester, selectedAcademicYear, allSchedules]);
 
   // Handle academic year change
   const handleAcademicYearChange = (year: string) => {
-    setSelectedAcademicYear(year)
-    // No need to fetch again, just filter the existing data
-  }
+    console.log("Academic year changed to:", year);
+    setSelectedAcademicYear(year);
+  };
 
   const handleSemesterChange = (semester: string) => {
-    setSelectedSemester(semester)
-    // No need to fetch again, just filter the existing data
-  }
+    console.log("Semester changed to:", semester);
+    setSelectedSemester(semester);
+  };
 
   // Handle adding a new schedule
   const handleAddSchedule = () => {
-    setSelectedSchedule(null)
-    setIsModalOpen(true)
-  }
+    setSelectedSchedule(null);
+    setIsModalOpen(true);
+  };
 
   // Handle editing an existing schedule
   const handleEditSchedule = (schedule: any) => {
-    setSelectedSchedule(schedule)
-    setIsModalOpen(true)
-  }
+    setSelectedSchedule(schedule);
+    setIsModalOpen(true);
+  };
 
   // Handle closing the modal
   const handleCloseModal = () => {
-    setIsModalOpen(false)
-    fetchAllSchedules() // Refresh all schedules after modal closes
-  }
+    setIsModalOpen(false);
+    fetchAllSchedules(); // Refresh all schedules after modal closes
+  };
 
   // Define time slots from 7 AM to 6 PM
-  const timeSlots = Array.from({ length: 12 }, (_, i) => {
-    const hour = i + 7
-    const period = hour >= 12 ? "PM" : "AM"
-    const displayHour = hour > 12 ? hour - 12 : hour
-    return `${displayHour} ${period}`
-  })
+  const timeSlots = Array.from({ length: 15 }, (_, i) => {
+    const hour = i + 7;
+    const period = hour >= 12 ? "PM" : "AM";
+    const displayHour = hour > 12 ? hour - 12 : hour;
+    return `${displayHour} ${period}`;
+  });
 
   const weekDays = [
     { day: "SUN", date: 2 },
@@ -494,12 +551,16 @@ export function ScheduleView({ view }: ScheduleViewProps) {
     { day: "THU", date: 6 },
     { day: "FRI", date: 7 },
     { day: "SAT", date: 8 },
-  ]
+  ];
 
   return (
     <div className="flex h-full flex-col">
       <CalendarHeader
-        title={viewTitles[view]}
+        title={
+          facultyId && facultyName
+            ? `${facultyName}'s Schedule`
+            : viewTitles[view]
+        }
         academicYear={selectedAcademicYear}
         view={view}
         academicYears={uniqueAcademicYears}
@@ -518,7 +579,10 @@ export function ScheduleView({ view }: ScheduleViewProps) {
               {/* Time */}
             </div>
             {weekDays.map(({ day, date }) => (
-              <div key={`${day}-${date}`} className="flex flex-row justify-center gap-1 border-r p-2 text-center">
+              <div
+                key={`${day}-${date}`}
+                className="flex flex-row justify-center gap-1 border-r p-2 text-center"
+              >
                 <div className="text-sm font-medium">{day}</div>
                 <div className="text-sm text-muted-foreground">{date}</div>
               </div>
@@ -531,14 +595,19 @@ export function ScheduleView({ view }: ScheduleViewProps) {
               <div className="absolute inset-0 flex items-center justify-center bg-background/50 z-10">
                 <div className="flex flex-col items-center gap-2">
                   <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent"></div>
-                  <p className="text-sm text-muted-foreground">Loading schedules...</p>
+                  <p className="text-sm text-muted-foreground">
+                    Loading schedules...
+                  </p>
                 </div>
               </div>
             )}
             {/* Time column */}
             <div className="border-r">
               {timeSlots.map((time) => (
-                <div key={time} className="flex justify-center items-center border-b h-20 p-2 text-sm">
+                <div
+                  key={time}
+                  className="flex justify-center items-center border-b h-20 p-2 text-sm"
+                >
                   {time}
                 </div>
               ))}
@@ -551,16 +620,17 @@ export function ScheduleView({ view }: ScheduleViewProps) {
                   .filter((event) => event.day === day)
                   .map((event) => {
                     // Calculate position and height based on start and end times
-                    const startMinutes = timeToMinutes(event.startTime)
-                    const endMinutes = timeToMinutes(event.endTime)
-                    const dayStartMinutes = timeToMinutes("7:00 AM")
+                    const startMinutes = timeToMinutes(event.startTime);
+                    const endMinutes = timeToMinutes(event.endTime);
+                    const dayStartMinutes = timeToMinutes("7:00 AM");
 
                     // Calculate top position (minutes from 7 AM)
-                    const topPosition = ((startMinutes - dayStartMinutes) / 60) * 5
+                    const topPosition =
+                      ((startMinutes - dayStartMinutes) / 60) * 5;
 
                     // Calculate height (duration in hours * row height)
-                    const durationHours = (endMinutes - startMinutes) / 60
-                    const height = durationHours * 5
+                    const durationHours = (endMinutes - startMinutes) / 60;
+                    const height = durationHours * 5;
 
                     return (
                       <div
@@ -582,15 +652,21 @@ export function ScheduleView({ view }: ScheduleViewProps) {
                           view={view}
                         />
                       </div>
-                    )
+                    );
                   })}
               </div>
             ))}
           </div>
           {!isLoading && filteredSchedule.length === 0 && (
             <div className="col-span-full p-8 text-center">
-              <p className="text-muted-foreground">No schedules found for the selected academic year.</p>
-              <Button variant="outline" className="mt-4" onClick={handleAddSchedule}>
+              <p className="text-muted-foreground">
+                No schedules found for the selected filters.
+              </p>
+              <Button
+                variant="outline"
+                className="mt-4"
+                onClick={handleAddSchedule}
+              >
                 Add your first schedule
               </Button>
             </div>
@@ -605,6 +681,5 @@ export function ScheduleView({ view }: ScheduleViewProps) {
         currentAcademicYear={selectedAcademicYear}
       />
     </div>
-  )
+  );
 }
-

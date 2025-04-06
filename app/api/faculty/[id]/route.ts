@@ -5,10 +5,13 @@ import { facultyFormSchema } from "@/schemas/faculty.schema"
 const prisma = new PrismaClient()
 
 // GET a specific faculty member
-export async function GET(req: NextRequest, { params }: { params: { id: string } }) {
-  try {
-    const id = params.id
 
+export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  try {
+    // Await the params object before accessing its properties
+    const { id } = await params
+
+    
     const faculty = await prisma.faculty.findUnique({
       where: { facultyID: id },
       include: {
@@ -26,6 +29,7 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
     return NextResponse.json({ error: "Failed to fetch faculty member" }, { status: 500 })
   }
 }
+
 
 // UPDATE a faculty member
 export async function PUT(req: NextRequest, { params }: { params: { id: string } }) {

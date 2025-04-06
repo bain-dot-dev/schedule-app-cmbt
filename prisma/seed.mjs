@@ -13,6 +13,7 @@ async function main() {
       firstName: "John",
       middleName: "Lito",
       lastName: "Doe",
+      // isAdmin: true,
     },
   });
 

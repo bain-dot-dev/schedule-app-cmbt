@@ -22,6 +22,7 @@ import {
   PaginationPrevious,
 } from "@/components/ui/pagination";
 import { FacultyModal } from "@/components/faculty/faculty-modal";
+import { useRouter } from "next/navigation";
 
 // Define the Faculty type
 
@@ -55,7 +56,7 @@ export default function FacultyPage() {
   const [facultyList, setFacultyList] = useState<Faculty[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
-
+  const router = useRouter();
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(10); // You can make this adjustable if needed
@@ -227,6 +228,11 @@ export default function FacultyPage() {
     return pageNumbers;
   };
 
+  // Navigate to faculty schedule
+  const handleViewFacultySchedule = (faculty: Faculty) => {
+    router.push(`/faculty-sched/${faculty.facultyID}`);
+  };
+
   return (
     <div className="py-8">
       <div className="mb-8 flex flex-col lg:flex-row items-center justify-between">
@@ -285,7 +291,11 @@ export default function FacultyPage() {
                       <TableCell>{faculty.rank}</TableCell>
                       <TableCell>
                         <div className="flex justify-center gap-2">
-                          <Button variant="outline" size="icon">
+                          <Button
+                            variant="outline"
+                            size="icon"
+                            onClick={() => handleViewFacultySchedule(faculty)}
+                          >
                             <Eye className="h-4 w-4" />
                           </Button>
                           <Button
