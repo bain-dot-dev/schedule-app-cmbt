@@ -135,10 +135,35 @@ export async function PUT(
       );
     }
 
-    const courseCode: string = data.courseProgram
-      .split(" ")
-      .map((word: string) => word.charAt(0).toUpperCase())
-      .join("");
+        // List of words to ignore
+        const wordsToIgnore = [
+          "a",
+          "an",
+          "the",
+          "of",
+          "and",
+          "in",
+          "for",
+          "on",
+          "to",
+          "at",
+          "with",
+          "by",
+          "is",
+          "are",
+          "was",
+          "were",
+          "be",
+          "being",
+          "been",
+        ];
+    
+        // Generate the course code by excluding the unwanted words
+        const courseCode: string = data.courseProgram
+          .split(" ")
+          .filter((word: string) => !wordsToIgnore.includes(word.toLowerCase())) // Exclude the words in the list
+          .map((word: string) => word.charAt(0).toUpperCase()) // Take the first letter of each word
+          .join(""); // Join the letters to form the course code
 
     // Update course
     const updatedCourse = await prisma.courseProgram.update({

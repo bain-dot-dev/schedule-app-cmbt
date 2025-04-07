@@ -4,33 +4,62 @@ import bcrypt from "bcrypt";
 const prisma = new PrismaClient();
 
 async function main() {
-  const email = "test@gmail.com";
+  const adminEmail = "testadmin@gmail.com";
+  const adminHashedPassword = await bcrypt.hash("testadmin123", 10);
 
-  const hashedPassword = await bcrypt.hash("test123", 10);
+  const regularUserAdmin = "test@gmail.com";
+  const regularUserHashedPassword = await bcrypt.hash("test123", 10);
 
-  const user = await prisma.user.create({
+  const createUserAdmin = await prisma.user.create({
     data: {
       firstName: "John",
       middleName: "Lito",
       lastName: "Doe",
-      // isAdmin: true,
+      isAdmin: true,
+      isActive: true,
     },
   });
 
   await prisma.email.create({
     data: {
-      userID: user.userID,
-      email: email,
+      userID: createUserAdmin.userID,
+      email: adminEmail,
     },
   });
 
   await prisma.password.create({
     data: {
-      userID: user.userID,
-      password: hashedPassword,
+      userID: createUserAdmin.userID,
+      password: adminHashedPassword,
     },
   });
 
+  const createRegularUser = await prisma.user.create({
+    data: {
+      firstName: "Jane",
+      middleName: "Lito",
+      lastName: "Doe",
+      isAdmin: false,
+      isActive: true,
+    },
+  });
+
+  await prisma.email.create({
+    data: {
+      userID: createRegularUser.userID,
+      email: regularUserAdmin,
+    },
+  });
+
+  await prisma.password.create({
+    data: {
+      userID: createRegularUser.userID,
+      password: regularUserHashedPassword,
+    },
+  });
+
+  console.log("Successfully created admin");
+  console.log("Successfully created regular user");
   console.log("🌱 Seeding completed successfully!");
 }
 

@@ -110,11 +110,34 @@ export async function POST(request: Request) {
       );
     }
 
-    // Generate subject code from subject name
+        const wordsToIgnore = [
+          "a",
+          "an",
+          "the",
+          "of",
+          "and",
+          "in",
+          "for",
+          "on",
+          "to",
+          "at",
+          "with",
+          "by",
+          "is",
+          "are",
+          "was",
+          "were",
+          "be",
+          "being",
+          "been",
+        ];
+  
+
     let subjectCode = data.subjectName
-      .split(" ")
-      .map((word: string) => word.charAt(0).toUpperCase())
-      .join("");
+    .split(" ")
+    .filter((word: string) => !wordsToIgnore.includes(word.toLowerCase())) 
+    .map((word: string) => word.charAt(0).toUpperCase()) 
+    .join(""); 
 
     // Check if subject code already exists and append a number if needed
     let existingSubject = await prisma.subject.findFirst({

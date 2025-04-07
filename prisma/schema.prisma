@@ -45,9 +45,12 @@ model User {
   firstName   String    @db.VarChar(25)
   middleName  String?   @db.VarChar(25)
   lastName    String    @db.VarChar(25)
+  isAdmin    Boolean
+  isActive   Boolean
   emails      Email[]
   passwords   Password[]
   resetTokens ResetToken[]
+  verificationTokens VerificationToken[]
 }
 
 model Email {
@@ -71,6 +74,15 @@ model ResetToken {
   resetTokenExpires  DateTime?
   user               User     @relation(fields: [userID], references: [userID])
 }
+
+model VerificationToken {
+  verificationTokenID String    @id @default(uuid())
+  userID              String    @unique
+  verificationToken   String @db.VarChar(191)
+  verificationTokenExpires DateTime?
+  user                User   @relation(fields: [userID], references: [userID])
+}
+
 
 model Faculty {
   facultyID      String   @id @default(uuid())

@@ -10,20 +10,74 @@ export async function POST(req: NextRequest) {
   try {
     const { email, password } = await req.json();
 
-    const lookForEmail = await prisma.email.findUnique({ where: { email } });
+    // const lookForEmail = await prisma.email.findUnique({ where: { email } });
 
-    const user = await prisma.user.findUnique({
-      where: { userID: lookForEmail?.userID },
+    // const user = await prisma.user.findUnique({
+    //   where: { userID: lookForEmail?.userID },
+    // });
+
+    // const lookForPassword = await prisma.password.findUnique({
+    //   where: { userID: lookForEmail?.userID },
+    // });
+
+    // if (
+    //   !lookForPassword ||
+    //   !(await bcrypt.compare(password, lookForPassword.password))
+    // ) {
+    //   return NextResponse.json(
+    //     { message: "Invalid email or password" },
+    //     { status: 401 }
+    //   );
+    // }
+
+    // Find user by email
+    const userEmail = await prisma.email.findUnique({
+      where: { email },
+      include: {
+        user: {
+          include: {
+            passwords: true,
+            resetTokens: true,
+          },
+        },
+      },
     });
 
-    const lookForPassword = await prisma.password.findUnique({
-      where: { userID: lookForEmail?.userID },
-    });
+    if (!userEmail || !userEmail.user) {
+      return NextResponse.json(
+        { message: "Invalid email or password" },
+        { status: 401 }
+      );
+    }
 
-    if (
-      !lookForPassword ||
-      !(await bcrypt.compare(password, lookForPassword.password))
-    ) {
+    if (userEmail.user.isActive === false) {
+      return NextResponse.json(
+        { message: "Account is inactive" },
+        { status: 401 }
+      );
+    }
+
+    // // Check if user has a reset token with a non-null resetToken field
+    // // This indicates the user hasn't verified their email yet
+    // const pendingVerification = userEmail.user.resetTokens.some(
+    //   (token) => token.resetToken !== null && token.resetTokenExpires !== null,
+    // )
+
+    // if (pendingVerification) {
+    //   return NextResponse.json({ message: "Please verify your email before logging in" }, { status: 401 })
+    // }
+
+    // Check password
+    const userPassword = userEmail.user.passwords[0];
+    if (!userPassword) {
+      return NextResponse.json(
+        { message: "Invalid email or password" },
+        { status: 401 }
+      );
+    }
+
+    const passwordMatch = await bcrypt.compare(password, userPassword.password);
+    if (!passwordMatch) {
       return NextResponse.json(
         { message: "Invalid email or password" },
         { status: 401 }
@@ -32,11 +86,11 @@ export async function POST(req: NextRequest) {
 
     const res = NextResponse.json({
       message: "Logged in Successfully",
-      email: lookForEmail?.email,
+      email: userEmail?.email,
     });
 
     const userData = await prisma.user.findUnique({
-      where: { userID: user?.userID },
+      where: { userID: userEmail?.userID },
     });
 
     const session = await getIronSession<SessionData>(req, res, sessionOptions);
@@ -45,7 +99,8 @@ export async function POST(req: NextRequest) {
     session.firstname = userData?.firstName;
     session.middlename = userData?.middleName ?? undefined;
     session.lastname = userData?.lastName;
-    session.email = lookForEmail?.email;
+    session.email = userEmail?.email;
+    session.isAdmin = userData?.isAdmin ?? false;
     session.isLoggedIn = true;
     await session.save();
 

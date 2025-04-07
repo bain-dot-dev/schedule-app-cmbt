@@ -1,11 +1,13 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import {
   GraduationCap,
   Home,
   LayoutGrid,
   Users2,
   BookOpen,
+  UserRound,
 } from "lucide-react";
 // import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
@@ -19,43 +21,89 @@ import { NavMain } from "./nav-main";
 import { NavUser } from "./nav-user";
 import { usePathname } from "next/navigation";
 
-const data = {
-  user: {
-    name: "Monkey D. Luffy",
-    email: "pirateking@example.com",
-    avatar: "/avatars/shadcn.jpg",
-  },
-  menuItems: [
-    {
-      title: "Faculty",
-      url: "/faculty",
-      icon: Users2,
-    },
-    {
-      title: "Rooms",
-      url: "/room",
-      icon: Home,
-    },
-    {
-      title: "Sections",
-      url: "/section",
-      icon: LayoutGrid,
-    },
-    {
-      title: "Subjects",
-      url: "/subject",
-      icon: BookOpen,
-    },
-    {
-      title: "Courses",
-      url: "/course",
-      icon: GraduationCap,
-    },
-  ],
-};
+// const data = {
+//   menuItems: [
+//     {
+//       title: "Faculty",
+//       url: "/faculty",
+//       icon: Users2,
+//     },
+//     {
+//       title: "Rooms",
+//       url: "/room",
+//       icon: Home,
+//     },
+//     {
+//       title: "Sections",
+//       url: "/section",
+//       icon: LayoutGrid,
+//     },
+//     {
+//       title: "Subjects",
+//       url: "/subject",
+//       icon: BookOpen,
+//     },
+//     {
+//       title: "Courses",
+//       url: "/course",
+//       icon: GraduationCap,
+//     },
+//     { title: "Users", url: "/users", icon: UserRound },
+//   ],
+// };
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const currentPath = usePathname();
+
+  const [isAdmin, setIsAdmin] = useState(false)
+
+  // Fetch the user's session data when the component mounts
+  useEffect(() => {
+    const checkAdminStatus = async () => {
+      try {
+        const response = await fetch("/api/auth/session")
+        if (response.ok) {
+          const userData = await response.json()
+          setIsAdmin(userData.isAdmin === true)
+        }
+      } catch (error) {
+        console.error("Error fetching user data:", error)
+      }
+    }
+
+    checkAdminStatus()
+  }, [])
+
+    // Filter menu items based on admin status
+    const menuItems = [
+      {
+        title: "Faculty",
+        url: "/faculty",
+        icon: Users2,
+      },
+      {
+        title: "Rooms",
+        url: "/room",
+        icon: Home,
+      },
+      {
+        title: "Sections",
+        url: "/section",
+        icon: LayoutGrid,
+      },
+      {
+        title: "Subjects",
+        url: "/subject",
+        icon: BookOpen,
+      },
+      {
+        title: "Courses",
+        url: "/course",
+        icon: GraduationCap,
+      },
+      // Only include Users menu item if user is admin
+      ...(isAdmin ? [{ title: "Users", url: "/users", icon: UserRound }] : []),
+    ]
 
   return (
     <Sidebar collapsible="icon" {...props}>
@@ -87,7 +135,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
             </SidebarMenuItem>
           ))}
         </SidebarMenu> */}
-        <NavMain items={data.menuItems} currentPath={currentPath} />
+        <NavMain items={menuItems} currentPath={currentPath} />
       </SidebarContent>
       <SidebarFooter className="px-2 py-2">
         {/* <SidebarMenu>
@@ -125,7 +173,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu> */}
-        <NavUser user={data.user} />
+        <NavUser />
       </SidebarFooter>
     </Sidebar>
   );

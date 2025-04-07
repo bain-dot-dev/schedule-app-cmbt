@@ -58,7 +58,7 @@ export function LoginForm({
       }
 
       toast.success("Login successful", {
-        description: "Redirecting to dashboard...",
+        description: "Redirecting to home...",
       });
 
       // Redirect to dashboard or home page after successful login
@@ -120,7 +120,7 @@ export function LoginForm({
                 <div className="flex items-center">
                   <FormLabel>Password</FormLabel>
                   <a
-                    href="#"
+                    href="/forgot-password"
                     className="ml-auto text-sm underline-offset-4 hover:underline"
                   >
                     Forgot your password?

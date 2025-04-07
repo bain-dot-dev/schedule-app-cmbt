@@ -4,11 +4,13 @@ import { User } from "@/interfaces/user";
 
 // Set a default user object matching the User interface
 const defaultUser: User = {
-  userid: 0,
+  userid: "",
   firstname: "",
   middlename: "",
   lastname: "",
   email: "",
+  isLoggedIn: false,
+  isAdmin: false,
 };
 
 const userSessionContext = createContext<User>(defaultUser);
@@ -27,6 +29,7 @@ const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
       const session: User = await response.json();
+      console.log(session, "session from provider");
       setUser(session);
     } catch (error) {
       console.error("Failed to fetch session:", error);

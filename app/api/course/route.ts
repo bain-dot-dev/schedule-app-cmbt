@@ -110,6 +110,56 @@ export async function GET(request: NextRequest) {
 //   }
 // }
 
+// export async function POST(request: Request) {
+//   try {
+//     const data = await request.json();
+
+//     // Validate required field
+//     if (!data.courseProgram) {
+//       return NextResponse.json(
+//         { error: "Missing required field: courseProgram" },
+//         { status: 400 }
+//       );
+//     }
+
+//     const courseCode: string = data.courseProgram
+//       .split(" ")
+//       .map((word: string) => word.charAt(0).toUpperCase())
+//       .join("");
+
+//     // Check if the generated course code already exists
+//     const existingCourse = await prisma.courseProgram.findUnique({
+//       where: { courseCode },
+//     });
+
+//     if (existingCourse) {
+//       return NextResponse.json(
+//         {
+//           error:
+//             "Generated course code already exists. Try renaming the course program.",
+//         },
+//         { status: 400 }
+//       );
+//     }
+
+//     // Create a new course in the database
+//     const newCourse = await prisma.courseProgram.create({
+//       data: {
+//         courseCode,
+//         courseProgram: data.courseProgram,
+//       },
+//     });
+
+//     return NextResponse.json(newCourse, { status: 201 });
+//   } catch (error) {
+//     console.error("Error creating course:", error);
+//     return NextResponse.json(
+//       { error: "Failed to create course" },
+//       { status: 500 }
+//     );
+//   }
+// }
+
 export async function POST(request: Request) {
   try {
     const data = await request.json();
@@ -122,10 +172,35 @@ export async function POST(request: Request) {
       );
     }
 
+    // List of words to ignore
+    const wordsToIgnore = [
+      "a",
+      "an",
+      "the",
+      "of",
+      "and",
+      "in",
+      "for",
+      "on",
+      "to",
+      "at",
+      "with",
+      "by",
+      "is",
+      "are",
+      "was",
+      "were",
+      "be",
+      "being",
+      "been",
+    ];
+
+    // Generate the course code by excluding the unwanted words
     const courseCode: string = data.courseProgram
       .split(" ")
-      .map((word: string) => word.charAt(0).toUpperCase())
-      .join("");
+      .filter((word: string) => !wordsToIgnore.includes(word.toLowerCase())) // Exclude the words in the list
+      .map((word: string) => word.charAt(0).toUpperCase()) // Take the first letter of each word
+      .join(""); // Join the letters to form the course code
 
     // Check if the generated course code already exists
     const existingCourse = await prisma.courseProgram.findUnique({

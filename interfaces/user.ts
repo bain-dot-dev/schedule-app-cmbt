@@ -1,8 +1,10 @@
 export interface User {
-    userid: number;
+    userid: string;
     firstname: string;
     middlename: string;
     lastname: string;
     email: string;
+    isLoggedIn?: boolean;
+    isAdmin?: boolean;
   }
   

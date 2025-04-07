@@ -1,5 +1,3 @@
-// This middleware protects routes that require authentication
-
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { getIronSession } from "iron-session";
@@ -14,40 +12,26 @@ export async function middleware(request: NextRequest) {
     sessionOptions
   );
 
-  // If the user is not logged in and trying to access a protected route
+  // console.log("Session data:", session);
+
+  const pathname = request.nextUrl.pathname;
+
+  // Redirect if not logged in
   if (!session.isLoggedIn) {
     const url = request.nextUrl.clone();
     url.pathname = "/";
     return NextResponse.redirect(url);
   }
 
-  // Check if the request URL matches any of the protected paths
-  if (
-    protectedPaths.some((path) => request.nextUrl.pathname.startsWith(path))
-  ) {
-    // If user is not defined or does not have access, redirect to access denied page
-    if (!session.isLoggedIn) {
-      const url = request.nextUrl.clone();
-      url.pathname = "/"; // Redirect to an unauthorized page
-      return NextResponse.redirect(url);
-    }
+  // If the route is /users (admin-only) and the user is not an admin
+  if (pathname.startsWith("/users") && !session.isAdmin) {
+    const url = request.nextUrl.clone();
+    url.pathname = "/";
+    return NextResponse.redirect(url);
   }
 
   return res;
 }
-
-const protectedPaths = [
-  "/faculty/:path*",
-  "/room/:path*",
-  "/section/:path*",
-  "/subject/:path*",
-  "/course/:path*",
-  "/faculty-sched/:path*",
-  "/room-sched/:path*",
-  "/section-sched/:path*",
-  "/subject-sched/:path*",
-  "/course-sched/:path*",
-];
 
 // Add all protected routes here
 export const config = {
@@ -60,7 +44,6 @@ export const config = {
     "/faculty-sched/:path*",
     "/room-sched/:path*",
     "/section-sched/:path*",
-    "/subject-sched/:path*",
-    "/course-sched/:path*",
+    "/users/:path*", // admin-only path
   ],
 };

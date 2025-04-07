@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useContext } from "react";
 import { useRouter } from "next/navigation";
 import { ChevronsUpDown, LogOut } from "lucide-react";
 // import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -19,17 +19,11 @@ import {
 } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
+import { userSessionContext } from "@/components/sessionContext-provider";
 
-export function NavUser({
-  user,
-}: {
-  user: {
-    name: string;
-    email: string;
-    avatar: string;
-  };
-}) {
+export function NavUser({}) {
   const { isMobile } = useSidebar();
+  const user = useContext(userSessionContext);
 
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
@@ -59,6 +53,18 @@ export function NavUser({
     }
   };
 
+  console.log(user, "user session context");
+
+  // Combine first name, middle name, and last name
+  const fullName =
+    user?.firstname && user?.lastname
+      ? `${user.firstname} ${user.middlename ? `${user.middlename} ` : ""}${
+          user.lastname
+        }`
+      : "Unknown User";
+
+  // console.log(user, "user session context");
+
   return (
     <SidebarMenu>
       <SidebarMenuItem>
@@ -73,7 +79,7 @@ export function NavUser({
                 <AvatarFallback className="rounded-lg">CN</AvatarFallback>
               </Avatar> */}
               <div className="grid flex-1 text-left text-sm leading-tight group-data-[collapsible=icon]:hidden">
-                <span className="truncate font-semibold">{user.name}</span>
+                <span className="truncate font-semibold">{fullName}</span>
                 <span className="truncate text-xs">{user.email}</span>
               </div>
               <ChevronsUpDown className="ml-auto size-4 group-data-[collapsible=icon]:m-auto" />
