@@ -364,8 +364,8 @@ function transformSchedule(schedule: any) {
     day: numberToDay(schedule.day),
     startTime: formatTimeString(schedule.timeStart),
     endTime: formatTimeString(schedule.timeEnd),
-    course: schedule.subject?.subjectCode || "",
-    section: schedule.section?.sectionName || "",
+    subject: schedule.subject?.subjectCode || "",
+    sectionCourse: schedule.section?.sectionName || "",
     instructor: schedule.faculty?.firstName
       ? `${schedule.faculty.firstName} ${schedule.faculty.lastName}`
       : "",
@@ -387,7 +387,7 @@ export async function GET(
       include: {
         faculty: true,
         room: true,
-        section: true,
+        sectionCourse: true,
         subject: true,
         academicYear: true,
       },
@@ -412,10 +412,10 @@ export async function GET(
 
 export async function PUT(
   request: Request,
-  { params }: { params: { id: string } }
-) {
-  try {
-    const id = params.id;
+  { params }: { params: Promise<{ id: string }> }) {
+    try {
+      // Await the params object before accessing its properties
+      const { id } = await params;
     const data = await request.json();
 
     // Check if schedule exists
@@ -469,7 +469,7 @@ export async function PUT(
     // If academicYear is a string in format YYYY-YYYY, find or create the record
     if (data.academicYear.includes("-")) {
       const academicYear = await prisma.academicYear.findFirst({
-        where: { academicYear: data.academicYear },
+        where: { academicYearName: data.academicYear },
       });
 
       if (academicYear) {
@@ -477,7 +477,7 @@ export async function PUT(
       } else {
         // Create new academic year
         const newAcademicYear = await prisma.academicYear.create({
-          data: { academicYear: data.academicYear },
+          data: { academicYearName: data.academicYear },
         });
         academicYearID = newAcademicYear.academicYearID;
       }
@@ -542,7 +542,7 @@ export async function PUT(
       data: {
         facultyID: data.faculty,
         subjectID: data.subject,
-        sectionID: sectionID,
+        sectionCourseID: sectionID,
         roomID: data.room,
         academicYearID: academicYearID,
         semester: semesterEnum,
@@ -553,7 +553,7 @@ export async function PUT(
       include: {
         faculty: true,
         room: true,
-        section: true,
+        sectionCourse: true,
         subject: true,
         academicYear: true,
       },

@@ -71,7 +71,7 @@ export function SubjectModal({ isOpen, onClose, subject }: SubjectModalProps) {
       form.reset({
         subjectName: subject.subjectName || "",
         // subjectCode: subject.subjectCode || "",
-        numberOfUnits: subject.numberOfUnits || "",
+        numberOfUnits: subject.numberOfUnits?.toString() || "",
       });
     } else {
       form.reset({

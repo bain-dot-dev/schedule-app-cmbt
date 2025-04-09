@@ -35,10 +35,11 @@ const prisma = new PrismaClient();
 
 export async function PUT(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const id = params.id;
+    // Await the params object before accessing its properties
+    const { id } = await params;
     const data = await request.json();
 
     // Validate required fields

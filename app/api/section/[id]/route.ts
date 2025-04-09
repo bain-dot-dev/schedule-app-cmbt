@@ -1,11 +1,15 @@
-import { NextResponse } from "next/server"
-import { PrismaClient } from "@prisma/client"
+import { NextResponse } from "next/server";
+import { PrismaClient } from "@prisma/client";
 
-const prisma = new PrismaClient()
+const prisma = new PrismaClient();
 
-export async function GET(request: Request, { params }: { params: { id: string } }) {
+export async function GET(
+  request: Request,
+  { params }: { params: Promise<{ id: string }> }
+) {
   try {
-    const id = params.id
+    // Await the params object before accessing its properties
+    const { id } = await params;
 
     // Find the section
     const section = await prisma.section.findUnique({
@@ -17,36 +21,48 @@ export async function GET(request: Request, { params }: { params: { id: string }
           },
         },
       },
-    })
+    });
 
     if (!section) {
-      return NextResponse.json({ error: "Section not found" }, { status: 404 })
+      return NextResponse.json({ error: "Section not found" }, { status: 404 });
     }
 
     // Format the response
     const formattedSection = {
       id: section.sectionID,
       sectionName: section.sectionName,
-      courseProgram: section.sectionCourses[0]?.courseProgram?.courseProgram || null,
-      courseProgramID: section.sectionCourses[0]?.courseProgram?.courseProgramID || null,
-    }
+      courseProgram:
+        section.sectionCourses[0]?.courseProgram?.courseProgram || null,
+      courseProgramID:
+        section.sectionCourses[0]?.courseProgram?.courseProgramID || null,
+    };
 
-    return NextResponse.json(formattedSection)
+    return NextResponse.json(formattedSection);
   } catch (error) {
-    console.error("Error fetching section:", error)
-    return NextResponse.json({ error: "Failed to fetch section" }, { status: 500 })
+    console.error("Error fetching section:", error);
+    return NextResponse.json(
+      { error: "Failed to fetch section" },
+      { status: 500 }
+    );
   }
 }
 
-export async function PUT(request: Request, { params }: { params: { id: string } }) {
+export async function PUT(
+  request: Request,
+  { params }: { params: Promise<{ id: string }> }
+) {
   try {
-    const id = params.id
-    const data = await request.json()
-    const { sectionName, courseProgram } = data
+    // Await the params object before accessing its properties
+    const { id } = await params;
+    const data = await request.json();
+    const { sectionName, courseProgram } = data;
 
     // Validate required fields
     if (!sectionName || !courseProgram) {
-      return NextResponse.json({ error: "Missing required fields" }, { status: 400 })
+      return NextResponse.json(
+        { error: "Missing required fields" },
+        { status: 400 }
+      );
     }
 
     // Check if section exists
@@ -55,19 +71,22 @@ export async function PUT(request: Request, { params }: { params: { id: string }
       include: {
         sectionCourses: true,
       },
-    })
+    });
 
     if (!section) {
-      return NextResponse.json({ error: "Section not found" }, { status: 404 })
+      return NextResponse.json({ error: "Section not found" }, { status: 404 });
     }
 
     // Check if course program exists
     const course = await prisma.courseProgram.findUnique({
       where: { courseProgram },
-    })
+    });
 
     if (!course) {
-      return NextResponse.json({ error: "Course program does not exist" }, { status: 400 })
+      return NextResponse.json(
+        { error: "Course program does not exist" },
+        { status: 400 }
+      );
     }
 
     // Start a transaction to ensure data consistency
@@ -80,40 +99,45 @@ export async function PUT(request: Request, { params }: { params: { id: string }
             sectionName,
             sectionID: { not: id },
           },
-        })
+        });
 
         if (existingSection) {
-          throw new Error("A section with this name already exists")
+          throw new Error("A section with this name already exists");
         }
 
         // Update the section name
         await tx.section.update({
           where: { sectionID: id },
           data: { sectionName },
-        })
+        });
       }
 
       // Check if the course program changed
-      const currentCourseRelation = section.sectionCourses[0]
+      const currentCourseRelation = section.sectionCourses[0];
 
-      if (!currentCourseRelation || currentCourseRelation.courseProgramID !== course.courseProgramID) {
+      if (
+        !currentCourseRelation ||
+        currentCourseRelation.courseProgramID !== course.courseProgramID
+      ) {
         // Check if the new relationship already exists for another section
         const existingSectionCourse = await tx.sectionCourse.findFirst({
           where: {
             sectionID: id,
             courseProgramID: course.courseProgramID,
           },
-        })
+        });
 
         if (existingSectionCourse) {
-          throw new Error("This section is already associated with this course program")
+          throw new Error(
+            "This section is already associated with this course program"
+          );
         }
 
         // Delete existing relationships for this section
         if (currentCourseRelation) {
           await tx.sectionCourse.deleteMany({
             where: { sectionID: id },
-          })
+          });
         }
 
         // Create new relationship
@@ -122,7 +146,7 @@ export async function PUT(request: Request, { params }: { params: { id: string }
             sectionID: id,
             courseProgramID: course.courseProgramID,
           },
-        })
+        });
       }
 
       // Get the updated section with its relationships
@@ -135,28 +159,31 @@ export async function PUT(request: Request, { params }: { params: { id: string }
             },
           },
         },
-      })
+      });
 
-      return updatedSection
-    })
+      return updatedSection;
+    });
 
     // Format the response
     const formattedResult = {
       id: result?.sectionID,
       sectionName: result?.sectionName,
-      courseProgram: result?.sectionCourses[0]?.courseProgram?.courseProgram || null,
-      courseProgramID: result?.sectionCourses[0]?.courseProgram?.courseProgramID || null,
-    }
+      courseProgram:
+        result?.sectionCourses[0]?.courseProgram?.courseProgram || null,
+      courseProgramID:
+        result?.sectionCourses[0]?.courseProgram?.courseProgramID || null,
+    };
 
-    return NextResponse.json(formattedResult)
+    return NextResponse.json(formattedResult);
   } catch (error) {
-    console.error("Error updating section:", error)
+    console.error("Error updating section:", error);
     return NextResponse.json(
       {
-        error: error instanceof Error ? error.message : "Failed to update section",
+        error:
+          error instanceof Error ? error.message : "Failed to update section",
       },
-      { status: 500 },
-    )
+      { status: 500 }
+    );
   }
 }
 
@@ -191,4 +218,3 @@ export async function PUT(request: Request, { params }: { params: { id: string }
 //     return NextResponse.json({ error: "Failed to delete section" }, { status: 500 })
 //   }
 // }
-

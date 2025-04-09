@@ -29,7 +29,7 @@ const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
       const session: User = await response.json();
-      console.log(session, "session from provider");
+      // console.log(session, "session from provider");
       setUser(session);
     } catch (error) {
       console.error("Failed to fetch session:", error);

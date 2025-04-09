@@ -1,9 +1,8 @@
 "use client";
 
-import { Plus, Search } from "lucide-react";
+import { Plus } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import {
   Select,
   SelectContent,
@@ -16,7 +15,7 @@ interface CalendarHeaderProps {
   title: string;
   // month: string;
   academicYear: string;
-  view?: "rooms" | "faculty" | "sections";
+  view?: "Room" | "Faculty" | "Section";
   academicYears?: string[];
   semester: string;
   semesters?: string[];
@@ -43,7 +42,7 @@ export function CalendarHeader({
     <div className="no-print flex flex-col lg:flex-row items-center justify-between pb-4 lg:px-4">
       <div className="flex flex-col gap-1 text-lg lg:text-2xl font-medium lg:font-semibold pb-4 lg:pb-0">
         <h1 className="">
-          {title} {view} Program
+        {view} {title} Program
         </h1>
         <h1>
           {splitSemester} Academic Year {academicYear}

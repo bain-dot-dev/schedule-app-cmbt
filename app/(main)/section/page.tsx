@@ -22,6 +22,7 @@ import {
   PaginationPrevious,
 } from "@/components/ui/pagination";
 import { SectionModal } from "@/components/section/section-modal";
+import { useRouter } from "next/navigation";
 
 interface CourseProgram {
   courseProgramID: string;
@@ -67,7 +68,7 @@ export default function SectionPage() {
   const [sections, setSections] = useState<SectionDisplay[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
-
+  const router = useRouter();
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(10);
@@ -269,6 +270,10 @@ export default function SectionPage() {
     return pageNumbers;
   };
 
+  const handleViewSectionSchedule = (section: SectionDisplay) => {
+    router.push(`/section-sched/${section.id}`);
+  };
+
   return (
     <div className="py-8">
       <div className="mb-8 flex flex-col lg:flex-row items-center justify-between">
@@ -317,7 +322,11 @@ export default function SectionPage() {
                       <TableCell>{section.courseProgram}</TableCell>
                       <TableCell>
                         <div className="flex justify-center gap-2">
-                          <Button variant="outline" size="icon">
+                          <Button
+                            variant="outline"
+                            size="icon"
+                            onClick={() => handleViewSectionSchedule(section)}
+                          >
                             <Eye className="h-4 w-4" />
                           </Button>
                           <Button

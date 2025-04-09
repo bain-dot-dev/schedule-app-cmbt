@@ -92,10 +92,11 @@ const prisma = new PrismaClient();
 
 export async function PUT(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const id = params.id;
+    // Await the params object before accessing its properties
+    const { id } = await params;
     const data = await request.json();
     const { courseProgram } = data;
 
@@ -135,35 +136,35 @@ export async function PUT(
       );
     }
 
-        // List of words to ignore
-        const wordsToIgnore = [
-          "a",
-          "an",
-          "the",
-          "of",
-          "and",
-          "in",
-          "for",
-          "on",
-          "to",
-          "at",
-          "with",
-          "by",
-          "is",
-          "are",
-          "was",
-          "were",
-          "be",
-          "being",
-          "been",
-        ];
-    
-        // Generate the course code by excluding the unwanted words
-        const courseCode: string = data.courseProgram
-          .split(" ")
-          .filter((word: string) => !wordsToIgnore.includes(word.toLowerCase())) // Exclude the words in the list
-          .map((word: string) => word.charAt(0).toUpperCase()) // Take the first letter of each word
-          .join(""); // Join the letters to form the course code
+    // List of words to ignore
+    const wordsToIgnore = [
+      "a",
+      "an",
+      "the",
+      "of",
+      "and",
+      "in",
+      "for",
+      "on",
+      "to",
+      "at",
+      "with",
+      "by",
+      "is",
+      "are",
+      "was",
+      "were",
+      "be",
+      "being",
+      "been",
+    ];
+
+    // Generate the course code by excluding the unwanted words
+    const courseCode: string = data.courseProgram
+      .split(" ")
+      .filter((word: string) => !wordsToIgnore.includes(word.toLowerCase())) // Exclude the words in the list
+      .map((word: string) => word.charAt(0).toUpperCase()) // Take the first letter of each word
+      .join(""); // Join the letters to form the course code
 
     // Update course
     const updatedCourse = await prisma.courseProgram.update({

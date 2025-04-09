@@ -22,7 +22,7 @@ import {
   PaginationPrevious,
 } from "@/components/ui/pagination";
 import { RoomModal } from "@/components/room/room-modal";
-// import { toast } from "sonner";
+import { useRouter } from "next/navigation";
 
 interface Room {
   roomID: string;
@@ -43,7 +43,7 @@ export default function RoomPage() {
   const [rooms, setRooms] = useState<Room[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
-
+  const router = useRouter();
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(10); // You can make this adjustable if needed
@@ -207,10 +207,14 @@ export default function RoomPage() {
     return pageNumbers;
   };
 
+  const handleViewRoomSchedule = (room: Room) => {
+    router.push(`/room-sched/${room.roomID}`);
+  };
+
   return (
     <div className="py-8">
       <div className="mb-8 flex flex-col lg:flex-row items-center justify-between">
-      <h1 className="text-[32px] leading-5 font-semibold text-masala-900 pb-8 lg:pb-0">
+        <h1 className="text-[32px] leading-5 font-semibold text-masala-900 pb-8 lg:pb-0">
           List of rooms
         </h1>
         <div className="flex items-center gap-4">
@@ -264,7 +268,11 @@ export default function RoomPage() {
                       <TableCell>{room.type}</TableCell>
                       <TableCell>
                         <div className="flex justify-center gap-2">
-                          <Button variant="outline" size="icon">
+                          <Button
+                            variant="outline"
+                            size="icon"
+                            onClick={() => handleViewRoomSchedule(room)}
+                          >
                             <Eye className="h-4 w-4" />
                           </Button>
                           <Button

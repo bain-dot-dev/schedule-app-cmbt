@@ -13,5 +13,5 @@ export default function FacultySchedulePage() {
   const params = useParams();
   const facultyId = params.id as string;
 
-  return <ScheduleView view="faculty" facultyId={facultyId} />;
+  return <ScheduleView view="Faculty" facultyId={facultyId} />;
 }

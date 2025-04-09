@@ -453,8 +453,8 @@ function transformSchedule(schedule: any) {
     day: numberToDay(schedule.day),
     startTime: formatTimeString(schedule.timeStart),
     endTime: formatTimeString(schedule.timeEnd),
-    course: schedule.subject?.subjectCode || "",
-    section: schedule.sectionCourse?.section?.sectionName || "",
+    subject: schedule.subject?.subjectCode || "",
+    sectionCourse: schedule.sectionCourse?.section?.sectionName || "",
     instructor: schedule.faculty?.firstName
       ? `${schedule.faculty.firstName} ${schedule.faculty.lastName}`
       : "",
@@ -471,6 +471,8 @@ export async function GET(request: Request) {
     const academicYear = searchParams.get("academicYear");
     const semester = searchParams.get("semester");
     const facultyId = searchParams.get("facultyId");
+    const roomId = searchParams.get("roomId");
+    const sectionId = searchParams.get("sectionId");
 
     // Build query filters
     const filters: any = {};
@@ -487,6 +489,14 @@ export async function GET(request: Request) {
 
     if (facultyId) {
       filters.facultyID = facultyId;
+    }
+
+    if (roomId) {
+      filters.roomID = roomId;
+    }
+
+    if (sectionId) {
+      filters.sectionCourseID = sectionId;
     }
 
     // Fetch schedules with related data

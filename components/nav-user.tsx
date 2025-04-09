@@ -53,7 +53,7 @@ export function NavUser({}) {
     }
   };
 
-  console.log(user, "user session context");
+  // console.log(user, "user session context");
 
   // Combine first name, middle name, and last name
   const fullName =

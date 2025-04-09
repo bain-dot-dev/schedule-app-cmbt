@@ -29,7 +29,7 @@ export async function GET(req: NextRequest) {
   // Get the session using both request and response
   const session = await getIronSession<SessionData>(req, res, sessionOptions);
 
-  console.log("Session data in API:", session);
+  // console.log("Session data in API:", session);
 
   if (!session.isLoggedIn) {
     console.log("Not authenticated:", session);
