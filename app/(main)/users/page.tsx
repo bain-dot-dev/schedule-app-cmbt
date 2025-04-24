@@ -184,8 +184,8 @@ export default function UsersPage() {
 
   return (
     <div className="py-8">
-      <div className="mb-8 flex items-center justify-between">
-        <h1 className="text-[32px] leading-5 font-semibold text-masala-900">
+      <div className="mb-8 flex flex-col lg:flex-row items-center justify-between">
+        <h1 className="text-[32px] leading-5 font-semibold text-masala-900 pb-8 lg:pb-0">
           User Management
         </h1>
         <div className="flex items-center gap-4">
@@ -205,7 +205,7 @@ export default function UsersPage() {
         </div>
       </div>
 
-      <div className="mx-12 h-auto rounded-lg border bg-zircon-50/60">
+      <div className="lg:mx-12 h-auto rounded-lg border bg-zircon-50/60">
         {isLoading ? (
           <div className="flex justify-center py-8">Loading users...</div>
         ) : (

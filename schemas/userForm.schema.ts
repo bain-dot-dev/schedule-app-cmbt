@@ -11,9 +11,13 @@ export const userFormSchema = z.object({
       .or(z.literal("")),
     isAdmin: z.boolean().default(false),
     isActive: z.boolean().default(true),
-    sendVerificationEmail: z.boolean().default(true),
+    // sendVerificationEmail: z.boolean().default(true),
+    sendVerificationEmail: z.boolean().default(false),
   });
 
+  // just comment out the sendVerificationEmail field in the schema above 
+  // to that says default(false) to enable it by default then uncomment this line
+  // sendVerificationEmail: z.boolean().default(true),
 
 
 // Define the type based on the schema

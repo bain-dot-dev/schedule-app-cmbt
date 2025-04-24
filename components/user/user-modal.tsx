@@ -5,7 +5,6 @@ import { UserPlus } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
-import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -55,8 +54,14 @@ export function UserModal({ isOpen, onClose, user }: UserModalProps) {
       password: "",
       isAdmin: false,
       isActive: true,
-      sendVerificationEmail: true,
+      // sendVerificationEmail: true,
+      sendVerificationEmail: false,
     },
+
+    // just comment out the sendVerificationEmail field in the schema above
+    // to that says default(false) to enable it by default then uncomment this line
+    // sendVerificationEmail: z.boolean().default(true),
+    // then uncomment the checkbox for sendverification email in the form below to enable email verification in forms
   });
 
   // Update form values when user data changes (for edit mode)
@@ -171,7 +176,7 @@ export function UserModal({ isOpen, onClose, user }: UserModalProps) {
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
             <div className="flex flex-col gap-4">
-              <div className="flex flex-row gap-4">
+              <div className="flex sm:flex-row flex-col gap-4">
                 <FormField
                   control={form.control}
                   name="firstName"
@@ -214,6 +219,7 @@ export function UserModal({ isOpen, onClose, user }: UserModalProps) {
                   )}
                 />
               </div>
+
               <div className="grid grid-cols-2 gap-4">
                 <FormField
                   control={form.control}
@@ -297,7 +303,7 @@ export function UserModal({ isOpen, onClose, user }: UserModalProps) {
                 )}
               />
             </div>
-
+            {/* 
             {!isEditMode && (
               <FormField
                 control={form.control}
@@ -320,7 +326,7 @@ export function UserModal({ isOpen, onClose, user }: UserModalProps) {
                   </FormItem>
                 )}
               />
-            )}
+            )} */}
 
             <div className="flex justify-end gap-2 pt-4">
               <Button
