@@ -340,11 +340,11 @@ export function ScheduleView({
         onAddClick={handleAddSchedule}
       />
 
-      <div className="flex-1 overflow-auto p-4">
+      <div className="print-only flex-1 overflow-auto p-4">
         <div className="rounded-lg border bg-background">
           {/* Week header */}
-          <div className="grid grid-cols-[100px_repeat(7,1fr)] border-b">
-            <div className="flex justify-center items-center border-r p-2 text-sm font-medium text-muted-foreground">
+          <div className="grid grid-cols-[64px_repeat(7,1fr)] border-b">
+            <div className="flex justify-center items-center border-r p-2 w-16 text-sm font-medium text-muted-foreground">
               {/* Time */}
             </div>
             {weekDays.map(({ day, date }) => (
@@ -359,7 +359,7 @@ export function ScheduleView({
           </div>
 
           {/* Time grid */}
-          <div className="relative grid grid-cols-[100px_repeat(7,1fr)]">
+          <div className="relative grid grid-cols-[64px_repeat(7,1fr)]">
             {isLoading && (
               <div className="absolute inset-0 flex items-center justify-center bg-background/50 z-10">
                 <div className="flex flex-col items-center gap-2">
@@ -371,11 +371,11 @@ export function ScheduleView({
               </div>
             )}
             {/* Time column */}
-            <div className="border-r">
+            <div className="border-r w-16">
               {timeSlots.map((time) => (
                 <div
                   key={time}
-                  className="flex justify-center items-center border-b h-20 p-2 text-sm"
+                  className="flex justify-center items-center border-b h-16 p-2 text-sm"
                 >
                   {time}
                 </div>
@@ -395,11 +395,11 @@ export function ScheduleView({
 
                     // Calculate top position (minutes from 7 AM)
                     const topPosition =
-                      ((startMinutes - dayStartMinutes) / 60) * 5;
+                      ((startMinutes - dayStartMinutes) / 60) * 4;
 
                     // Calculate height (duration in hours * row height)
                     const durationHours = (endMinutes - startMinutes) / 60;
-                    const height = durationHours * 5;
+                    const height = durationHours * 4;
 
                     return (
                       <div

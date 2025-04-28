@@ -39,16 +39,16 @@ export function CalendarHeader({
   const splitSemester = semester.replace(/_/g, " ");
 
   return (
-    <div className="no-print flex flex-col lg:flex-row items-center justify-between pb-4 lg:px-4">
-      <div className="flex flex-col gap-1 text-lg lg:text-2xl font-medium lg:font-semibold pb-4 lg:pb-0">
+    <div className="print-only flex flex-col lg:flex-row items-center justify-between pb-4 lg:px-4">
+      <div className="flex flex-col gap-1 text-lg lg:text-2xl print:text-sm font-medium lg:font-semibold pb-4 lg:pb-0 ">
         <h1 className="">
-        {view} {title} Program
+          {view} {title} Program
         </h1>
         <h1>
           {splitSemester} Academic Year {academicYear}
         </h1>
       </div>
-      <div className="flex items-center gap-2">
+      <div className="no-print flex items-center gap-2">
         <Select
           value={semester || ""}
           onValueChange={onSemesterChange}
