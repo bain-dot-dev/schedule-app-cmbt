@@ -118,38 +118,3 @@ export async function PUT(
     );
   }
 }
-
-// DELETE a faculty member
-export async function DELETE(
-  req: NextRequest,
-  { params }: { params: { id: string } }
-) {
-  try {
-    const id = params.id;
-
-    // Check if faculty exists
-    const existingFaculty = await prisma.faculty.findUnique({
-      where: { facultyID: id },
-    });
-
-    if (!existingFaculty) {
-      return NextResponse.json(
-        { error: "Faculty member not found" },
-        { status: 404 }
-      );
-    }
-
-    // Delete the faculty member
-    await prisma.faculty.delete({
-      where: { facultyID: id },
-    });
-
-    return NextResponse.json({ success: true });
-  } catch (error) {
-    console.error("Error deleting faculty:", error);
-    return NextResponse.json(
-      { error: "Failed to delete faculty member" },
-      { status: 500 }
-    );
-  }
-}

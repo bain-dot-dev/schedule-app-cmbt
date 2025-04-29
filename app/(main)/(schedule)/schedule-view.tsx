@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { CalendarHeader } from "@/components/ui/calendar-header";
 import { ScheduleBlock } from "@/components/ui/schedule-block";
 import { ScheduleModal } from "@/components/schedule/schedule-modal";
@@ -13,18 +13,35 @@ interface ScheduleViewProps {
   roomId?: string | number;
 }
 
+interface Schedule {
+  id: string | number;
+  day: string;
+  startTime: string;
+  endTime: string;
+  subject: string;
+  sectionCourse: string;
+  courseCode: string;
+  instructor: string;
+  room: string;
+  academicYear: string;
+  semester: string;
+  faculty: string;
+}
+
 // Helper function to convert time string to minutes since midnight
 function timeToMinutes(timeStr: string): number {
   const [time, period] = timeStr.split(" ");
-  let [hours, minutes] = time.split(":").map(Number);
+  const [hours, minutes] = time.split(":").map(Number);
 
-  if (period === "PM" && hours !== 12) {
-    hours += 12;
-  } else if (period === "AM" && hours === 12) {
-    hours = 0;
+  let parsedHours = hours;
+
+  if (period === "PM" && parsedHours !== 12) {
+    parsedHours += 12;
+  } else if (period === "AM" && parsedHours === 12) {
+    parsedHours = 0;
   }
 
-  return hours * 60 + minutes;
+  return parsedHours * 60 + minutes;
 }
 
 export function ScheduleView({
@@ -34,11 +51,13 @@ export function ScheduleView({
   roomId,
 }: ScheduleViewProps) {
   const [selectedAcademicYear, setSelectedAcademicYear] = useState<string>("");
-  const [filteredSchedule, setFilteredSchedule] = useState<any[]>([]);
+  const [filteredSchedule, setFilteredSchedule] = useState<Schedule[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [selectedSchedule, setSelectedSchedule] = useState<any>(null);
+  const [selectedSchedule, setSelectedSchedule] = useState<Schedule | null>(
+    null
+  );
   const [isLoading, setIsLoading] = useState(true);
-  const [allSchedules, setAllSchedules] = useState<any[]>([]); // Store all schedules
+  const [allSchedules, setAllSchedules] = useState<Schedule[]>([]); // Store all schedules
   const [selectedSemester, setSelectedSemester] = useState<string>("");
   const [facultyName, setFacultyName] = useState<string>("");
   const [sectionName, setSectionName] = useState<string>("");
@@ -169,50 +188,51 @@ export function ScheduleView({
   // }, [facultyId]);
 
   // Fetch ALL schedules from API (without filtering by year)
-  const fetchAllSchedules = async () => {
-    setIsLoading(true);
+  // Use useCallback to memoize the function
+  const fetchAllSchedules = useCallback(async () => {
+    setIsLoading(true)
     try {
       // Build the URL with query parameters
-      let url = "/api/schedules";
-      const params = new URLSearchParams();
+      let url = "/api/schedules"
+      const params = new URLSearchParams()
 
       if (facultyId) {
-        params.append("facultyId", facultyId.toString());
+        params.append("facultyId", facultyId.toString())
       }
 
       if (sectionId) {
-        params.append("sectionId", sectionId.toString());
+        params.append("sectionId", sectionId.toString())
       }
 
       if (roomId) {
-        params.append("roomId", roomId.toString());
+        params.append("roomId", roomId.toString())
       }
 
       // Add the query parameters to the URL if any exist
-      const queryString = params.toString();
+      const queryString = params.toString()
       if (queryString) {
-        url += `?${queryString}`;
+        url += `?${queryString}`
       }
 
-      const response = await fetch(url);
+      const response = await fetch(url)
       if (!response.ok) {
-        throw new Error("Failed to fetch schedules");
+        throw new Error("Failed to fetch schedules")
       }
-      const data = await response.json();
-      console.log("Fetched schedules:", data);
-      setAllSchedules(data); // Store all schedules
+      const data = await response.json()
+      console.log("Fetched schedules:", data)
+      setAllSchedules(data) // Store all schedules
     } catch (error) {
-      console.error("Error fetching schedules:", error);
-      toast.error("Failed to load schedules");
+      console.error("Error fetching schedules:", error)
+      toast.error("Failed to load schedules")
     } finally {
-      setIsLoading(false);
+      setIsLoading(false)
     }
-  };
+  }, [facultyId, sectionId, roomId]) // Add dependencies here
 
   // Load schedules on component mount
   useEffect(() => {
-    fetchAllSchedules();
-  }, [facultyId, sectionId, roomId]);
+    fetchAllSchedules()
+  }, [fetchAllSchedules]) // Now we can safely add fetchAllSchedules as a dependency
 
   // Initialize default semester and academic year after data is loaded
   useEffect(() => {
@@ -289,7 +309,7 @@ export function ScheduleView({
   };
 
   // Handle editing an existing schedule
-  const handleEditSchedule = (schedule: any) => {
+  const handleEditSchedule = (schedule: Schedule) => {
     setSelectedSchedule(schedule);
     setIsModalOpen(true);
   };
@@ -416,6 +436,7 @@ export function ScheduleView({
                           endTime={event.endTime}
                           subject={event.subject}
                           sectionCourse={event.sectionCourse}
+                          courseCode={event.courseCode}
                           instructor={event.instructor}
                           room={event.room}
                           view={view}

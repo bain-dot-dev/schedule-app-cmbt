@@ -3,6 +3,7 @@ interface ScheduleBlockProps {
   endTime: string; // Format: "12:00 PM"
   subject: string;
   sectionCourse: string;
+  courseCode: string;
   instructor: string;
   room: string;
   view: "Room" | "Faculty" | "Section";
@@ -13,6 +14,7 @@ export function ScheduleBlock({
   endTime,
   subject,
   sectionCourse,
+  courseCode,
   instructor,
   room,
   view,
@@ -27,7 +29,7 @@ export function ScheduleBlock({
     <div
       className={`rounded-lg border ${viewColors[view]} w-full h-full flex flex-col`}
     >
-      <div className="text-center text-sm lg:text-base print:text-sm text-muted-foreground border-b pt-1 pb-1 mb-1">
+      <div className="text-center text-sm lg:text-base print:text-sm text-muted-foreground border-b mb-1">
         {startTime} - {endTime}
       </div>
       <div className="flex flex-1 flex-col justify-center items-center p-0">
@@ -36,15 +38,20 @@ export function ScheduleBlock({
             <div className="font-medium text-lg print:text-sm leading-3">
               {subject}
             </div>
-            <div className="font-medium text-lg print:text-sm leading-3">
-              {sectionCourse}
+            <div className="flex flex-1 flex-row justify-center items-center gap-2">
+              <div className="font-medium text-lg print:text-sm leading-3">
+                {courseCode}
+              </div>
+              <div className="font-medium text-lg print:text-sm leading-3">
+                {sectionCourse}
+              </div>
             </div>
           </div>
           <div className="space-y-1 print:space-y-0">
-            <div className="text-sm lg:text-lg print:text-sm leading-3">
+            <div className="text-base  print:text-sm leading-3">
               {instructor}
             </div>
-            <div className="text-sm lg:text-lg print:text-sm leading-3 text-muted-foreground">
+            <div className="text-base  print:text-sm leading-3 text-muted-foreground">
               Room {room}
             </div>
           </div>

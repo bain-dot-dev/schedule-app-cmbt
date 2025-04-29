@@ -56,7 +56,7 @@ type ScheduleFormValues = z.infer<typeof scheduleFormSchema>;
 interface ScheduleModalProps {
   isOpen: boolean;
   onClose: () => void;
-  schedule?: ScheduleValues;
+  schedule: ScheduleValues | null;
   currentAcademicYear: string;
   currentSemester?: string;
 }
