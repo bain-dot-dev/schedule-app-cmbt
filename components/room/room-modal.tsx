@@ -35,8 +35,9 @@ import { RoomFormValues, roomFormSchema } from "@/schemas/room.schema";
 const roomTypes = [
   { id: "Classroom", name: "Classroom" },
   { id: "Laboratory", name: "Laboratory" },
-  { id: "Lecture Hall", name: "Lecture Hall" },
-  { id: "Conference Room", name: "Conference Room" },
+  { id: "Lecture Room", name: "Lecture Room" },
+  { id: "Audio Visual Room", name: "Audio Visual Room" },
+  { id: "Virtual Reality Room", name: "Virtual Reality Room" },
 ];
 
 interface RoomModalProps {
@@ -114,7 +115,6 @@ export function RoomModal({ isOpen, onClose, room }: RoomModalProps) {
 
         toast.success("Room added", {
           description: "New room has been added successfully.",
-          
         });
       }
 
