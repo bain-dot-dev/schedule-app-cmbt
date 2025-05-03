@@ -6,10 +6,11 @@ const prisma = new PrismaClient();
 
 export async function GET(
   request: Request,
-  { params }: { params: Promise<{ id: string }> }) {
-    try {
-      // Await the params object before accessing its properties
-      const { id } = await params
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    // Await the params object before accessing its properties
+    const { id } = await params;
 
     const user = await prisma.user.findUnique({
       where: { userID: id },
@@ -91,7 +92,7 @@ export async function PUT(
           middleName: data.middleName,
           lastName: data.lastName,
           isAdmin: data.isAdmin || false,
-          isActive: data.isActive || true,
+          isActive: data.isActive || false,
         },
       });
 

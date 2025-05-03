@@ -86,7 +86,7 @@ export function UserModal({ isOpen, onClose, user }: UserModalProps) {
         password: "",
         isAdmin: false,
         isActive: true,
-        sendVerificationEmail: true,
+        sendVerificationEmail: false,
       });
     }
   }, [user, form]);
