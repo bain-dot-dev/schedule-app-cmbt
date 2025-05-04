@@ -40,7 +40,7 @@ export function CalendarHeader({
 
   return (
     <div className="print-only flex flex-col lg:flex-row items-center justify-between pb-4 lg:px-4">
-      <div className="flex flex-col gap-1 text-lg lg:text-2xl print:text-sm font-medium lg:font-semibold pb-4 lg:pb-0 ">
+      <div className="flex flex-col print:flex-row print:justify-between gap-1 text-lg lg:text-2xl print:text-sm font-medium lg:font-semibold pb-4 lg:pb-0 ">
         <h1 className="">
           {view} {title} Program
         </h1>

@@ -154,4 +154,42 @@
     display: block !important;
     padding: 0 !important;
   }
+
+  /* Adjust colors for better printing */
+  .bg-emerald-50 {
+    background-color: #f0fdf4 !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  .bg-blue-50 {
+    background-color: #eff6ff !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  .bg-purple-50 {
+    background-color: #faf5ff !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  /* Ensure borders print */
+  .border {
+    border-width: 1px !important;
+    border-style: solid !important;
+  }
+
+  /* Adjust text colors for better printing */
+  .text-muted-foreground {
+    color: #4b5563 !important;
+  }
+
+  /* Ensure the grid lines print */
+  .border-r,
+  .border-b {
+    border-color: #d1d5db !important;
+    border-style: solid !important;
+    border-width: 1px !important;
+  }
 }

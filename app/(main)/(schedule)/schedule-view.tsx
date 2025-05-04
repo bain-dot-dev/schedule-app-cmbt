@@ -190,49 +190,49 @@ export function ScheduleView({
   // Fetch ALL schedules from API (without filtering by year)
   // Use useCallback to memoize the function
   const fetchAllSchedules = useCallback(async () => {
-    setIsLoading(true)
+    setIsLoading(true);
     try {
       // Build the URL with query parameters
-      let url = "/api/schedules"
-      const params = new URLSearchParams()
+      let url = "/api/schedules";
+      const params = new URLSearchParams();
 
       if (facultyId) {
-        params.append("facultyId", facultyId.toString())
+        params.append("facultyId", facultyId.toString());
       }
 
       if (sectionId) {
-        params.append("sectionId", sectionId.toString())
+        params.append("sectionId", sectionId.toString());
       }
 
       if (roomId) {
-        params.append("roomId", roomId.toString())
+        params.append("roomId", roomId.toString());
       }
 
       // Add the query parameters to the URL if any exist
-      const queryString = params.toString()
+      const queryString = params.toString();
       if (queryString) {
-        url += `?${queryString}`
+        url += `?${queryString}`;
       }
 
-      const response = await fetch(url)
+      const response = await fetch(url);
       if (!response.ok) {
-        throw new Error("Failed to fetch schedules")
+        throw new Error("Failed to fetch schedules");
       }
-      const data = await response.json()
-      console.log("Fetched schedules:", data)
-      setAllSchedules(data) // Store all schedules
+      const data = await response.json();
+      console.log("Fetched schedules:", data);
+      setAllSchedules(data); // Store all schedules
     } catch (error) {
-      console.error("Error fetching schedules:", error)
-      toast.error("Failed to load schedules")
+      console.error("Error fetching schedules:", error);
+      toast.error("Failed to load schedules");
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }, [facultyId, sectionId, roomId]) // Add dependencies here
+  }, [facultyId, sectionId, roomId]); // Add dependencies here
 
   // Load schedules on component mount
   useEffect(() => {
-    fetchAllSchedules()
-  }, [fetchAllSchedules]) // Now we can safely add fetchAllSchedules as a dependency
+    fetchAllSchedules();
+  }, [fetchAllSchedules]); // Now we can safely add fetchAllSchedules as a dependency
 
   // Initialize default semester and academic year after data is loaded
   useEffect(() => {
