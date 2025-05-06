@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getIronSession } from "iron-session";
-import bcrypt from "bcrypt";
+import bcrypt from "bcryptjs";
 import { PrismaClient } from "@prisma/client";
 import { SessionData, sessionOptions } from "@/lib/session";
 
@@ -68,7 +68,7 @@ export async function POST(req: NextRequest) {
     // }
 
     // Check password
-    const userPassword = userEmail.user.passwords[0];
+    const userPassword = userEmail.user.passwords;
     if (!userPassword) {
       return NextResponse.json(
         { message: "Invalid email or password" },

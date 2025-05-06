@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { PrismaClient } from "@prisma/client";
-import bcrypt from "bcrypt";
+import bcrypt from "bcryptjs";
 import crypto from "crypto";
 import { sendVerificationEmail } from "@/lib/email";
 
@@ -39,7 +39,7 @@ export async function GET(request: NextRequest) {
       firstName: user.firstName,
       middleName: user.middleName,
       lastName: user.lastName,
-      email: user.emails[0]?.email || "",
+      email: user.emails?.email || "",
       isAdmin: user.isAdmin,
       isActive: user.isActive,
     }));

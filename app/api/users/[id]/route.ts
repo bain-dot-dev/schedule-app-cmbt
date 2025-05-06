@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { PrismaClient } from "@prisma/client";
-import bcrypt from "bcrypt";
+import bcrypt from "bcryptjs";
 
 const prisma = new PrismaClient();
 
@@ -28,7 +28,7 @@ export async function GET(
       firstName: user.firstName,
       middleName: user.middleName,
       lastName: user.lastName,
-      email: user.emails[0]?.email || "",
+      email: user.emails?.email || "",
     });
   } catch (error) {
     console.error("Error fetching user:", error);
@@ -69,7 +69,7 @@ export async function PUT(
     }
 
     // Check if email is being changed and if it's already in use by another user
-    if (existingUser.emails[0]?.email !== data.email) {
+    if (existingUser.emails?.email !== data.email) {
       const existingEmail = await prisma.email.findUnique({
         where: { email: data.email },
       });
@@ -97,7 +97,7 @@ export async function PUT(
       });
 
       // Update email if it exists, otherwise create it
-      if (existingUser.emails.length > 0) {
+      if (existingUser.emails) {
         await prisma.email.update({
           where: { userID: id },
           data: { email: data.email },
