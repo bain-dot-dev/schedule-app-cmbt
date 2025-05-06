@@ -1,11 +1,6 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
-  provider = "prisma-client-js"
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "windows", "linux-musl-openssl-3.0.x"]
 }
 
 datasource db {
@@ -13,148 +8,124 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-
-enum SemesterEnum {
-  First_Semester
-  Second_Semester
-}
-
-// enum RankEnum {
-//   Instructor_1
-//   Instructor_2
-//   Instructor_3
-//   Assistant_Professor_1
-//   Assistant_Professor_2
-//   Assistant_Professor_3
-//   Assistant_Professor_4
-//   Associate_Professor_1
-//   Associate_Professor_2
-//   Associate_Professor_3
-//   Associate_Professor_4
-//   Associate_Professor_5
-//   Professor_1
-//   Professor_2
-//   Professor_3
-//   Professor_4
-//   Professor_5
-//   Professor_6
-// }
-
 model User {
-  userID      String       @id @default(uuid())
-  firstName   String    @db.VarChar(25)
-  middleName  String?   @db.VarChar(25)
-  lastName    String    @db.VarChar(25)
-  isAdmin    Boolean
-  isActive   Boolean
-  emails      Email[]
-  passwords   Password[]
-  resetTokens ResetToken[]
-  verificationTokens VerificationToken[]
+  userID             String             @id @default(uuid())
+  firstName          String             @db.VarChar(25)
+  middleName         String?            @db.VarChar(25)
+  lastName           String             @db.VarChar(25)
+  isAdmin            Boolean
+  isActive           Boolean
+  emails             Email?
+  passwords          Password?
+  resetTokens        ResetToken?
+  verificationTokens VerificationToken?
 }
 
 model Email {
-  emailID String    @id @default(uuid())
-  userID  String    @unique
+  emailID String @id @default(uuid())
+  userID  String @unique
   email   String @unique @db.VarChar(50)
   user    User   @relation(fields: [userID], references: [userID])
 }
 
 model Password {
-  passwordID String    @id @default(uuid())
-  userID     String    @unique
+  passwordID String @id @default(uuid())
+  userID     String @unique
   password   String @db.VarChar(80)
   user       User   @relation(fields: [userID], references: [userID])
 }
 
 model ResetToken {
-  resetTokenID       String      @id @default(uuid())
-  userID             String      @unique
-  resetToken         String?  @db.VarChar(191)
-  resetTokenExpires  DateTime?
-  user               User     @relation(fields: [userID], references: [userID])
+  resetTokenID      String    @id @default(uuid())
+  userID            String    @unique
+  resetToken        String?   @db.VarChar(191)
+  resetTokenExpires DateTime?
+  user              User      @relation(fields: [userID], references: [userID])
 }
 
 model VerificationToken {
-  verificationTokenID String    @id @default(uuid())
-  userID              String    @unique
-  verificationToken   String @db.VarChar(191)
+  verificationTokenID      String    @id @default(uuid())
+  userID                   String    @unique
+  verificationToken        String    @db.VarChar(191)
   verificationTokenExpires DateTime?
-  user                User   @relation(fields: [userID], references: [userID])
+  user                     User      @relation(fields: [userID], references: [userID])
 }
 
-
 model Faculty {
-  facultyID      String   @id @default(uuid())
-  employeeNumber String?  @unique
-  firstName      String
-  middleName     String?
-  lastName       String
+  facultyID       String        @id @default(uuid())
+  employeeNumber  String?       @unique
+  firstName       String
+  middleName      String?
+  lastName        String
   courseProgramID String
   rank            String
-  CourseProgram CourseProgram @relation(fields: [courseProgramID], references: [courseProgramID])
-  schedules      Schedule[]
+  CourseProgram   CourseProgram @relation(fields: [courseProgramID], references: [courseProgramID])
+  schedules       Schedule[]
 }
 
 model Room {
-  roomID    String  @id @default(uuid())
-  roomNumber String @unique
-  type      String
-  schedules Schedule[]
+  roomID     String     @id @default(uuid())
+  roomNumber String     @unique
+  type       String
+  schedules  Schedule[]
 }
 
 model CourseProgram {
-  courseProgramID String   @id @default(uuid())
-  courseCode      String @unique
-  courseProgram   String @unique
+  courseProgramID String          @id @default(uuid())
+  courseCode      String          @unique
+  courseProgram   String          @unique
   faculties       Faculty[]
   sectionCourses  SectionCourse[]
 }
 
 model Section {
-  sectionID       String  @id @default(uuid())
-  sectionName     String @unique
-  sectionCourses  SectionCourse[]
+  sectionID      String          @id @default(uuid())
+  sectionName    String          @unique
+  sectionCourses SectionCourse[]
 }
 
 model SectionCourse {
-  SectionCourseID String @id @default(uuid())
+  SectionCourseID String        @id @default(uuid())
   sectionID       String
   courseProgramID String
-  section         Section @relation(fields: [sectionID], references: [sectionID])
-  courseProgram   CourseProgram @relation(fields: [courseProgramID], references: [courseProgramID])
   schedules       Schedule[]
+  courseProgram   CourseProgram @relation(fields: [courseProgramID], references: [courseProgramID])
+  section         Section       @relation(fields: [sectionID], references: [sectionID])
 }
 
 model Subject {
-  subjectID     String  @id @default(uuid())
-  subjectName   String @unique
-  subjectCode   String @unique
+  subjectID     String     @id @default(uuid())
+  subjectName   String     @unique
+  subjectCode   String     @unique
   numberOfUnits Int
   schedules     Schedule[]
 }
 
 model Schedule {
-  scheduleID     String @id @default(uuid())
-  facultyID      String
-  roomID         String
-  sectionCourseID      String
-  subjectID      String
-  academicYearID String
-  semester      SemesterEnum
-  day            Int
-  timeStart      DateTime
-  timeEnd        DateTime
-  faculty      Faculty      @relation(fields: [facultyID], references: [facultyID])
-  room         Room         @relation(fields: [roomID], references: [roomID])
-  sectionCourse      SectionCourse      @relation(fields: [sectionCourseID], references: [SectionCourseID])
-  subject      Subject      @relation(fields: [subjectID], references: [subjectID])
-  academicYear AcademicYear @relation(fields: [academicYearID], references: [academicYearID])
+  scheduleID      String        @id @default(uuid())
+  facultyID       String
+  roomID          String
+  subjectID       String
+  academicYearID  String
+  day             Int
+  timeStart       DateTime
+  timeEnd         DateTime
+  semester        SemesterEnum
+  sectionCourseID String
+  academicYear    AcademicYear  @relation(fields: [academicYearID], references: [academicYearID])
+  faculty         Faculty       @relation(fields: [facultyID], references: [facultyID])
+  room            Room          @relation(fields: [roomID], references: [roomID])
+  sectionCourse   SectionCourse @relation(fields: [sectionCourseID], references: [SectionCourseID])
+  subject         Subject       @relation(fields: [subjectID], references: [subjectID])
 }
 
 model AcademicYear {
-  academicYearID   String @id @default(uuid())
-  academicYearName String @unique
+  academicYearID   String     @id @default(uuid())
+  academicYearName String     @unique
   schedules        Schedule[]
 }
 
+enum SemesterEnum {
+  First_Semester
+  Second_Semester
+}
