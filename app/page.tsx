@@ -14,7 +14,7 @@ export default function LoginPage() {
           <div className="flex items-center gap-4 font-medium">
             <div className="flex h-20 w-20 items-center justify-center rounded-md bg-primary text-primary-foreground">
               <img
-                src="/images/cmbt.png"
+                src="/images/CMBT.png"
                 alt="NEUST Logo"
                 className="size-20 z-10"
               />
