@@ -1,0 +1,46 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    container_name: Schedule_app_CMBT_dev
+    environment:
+      DATABASE_URL: postgresql://postgres:12191980@host.docker.internal:5432/schedcmbtdev?schema=public
+      SESSION_SECRET: 4D1D5l0O6FS5PevmP/uOow1D3DdYki40qTj1lKvbbgA=
+      PORT: 3000
+    ports:
+      - "3000:3000"
+    depends_on:
+      - db
+    volumes:
+      - .:/app
+      - /app/node_modules
+    networks:
+      - app-network
+
+  db:
+    image: postgres:15
+    container_name: postgres_schedcmbt_db
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: 12191980
+      POSTGRES_DB: "schedcmbtdev"
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - app-network
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "postgres"]
+      interval: 10s
+      retries: 5
+      start_period: 30s
+      timeout: 5s
+
+networks:
+  app-network:
+    driver: bridge
+
+volumes:
+  postgres_data:

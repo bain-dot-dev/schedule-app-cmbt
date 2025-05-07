@@ -1,0 +1,74 @@
+# development 
+# Node.js related
+node_modules
+npm-debug.log
+yarn-error.log
+
+# Test artifacts
+coverage/
+*.test.js
+*.test.ts
+
+# Docker-related
+.dockerignore
+Dockerfile*
+docker-compose.yml
+
+# Local development environment
+.env
+.env.local
+.env.*.local
+
+# Git files
+.git/
+# .gitignore
+
+# # IDEs and editors
+# .vscode/
+# .idea/
+
+# # OS generated files
+# .DS_Store
+# Thumbs.db
+
+###########################
+
+# Production build artifacts
+# Node.js related
+# node_modules
+# npm-debug.log
+# yarn-error.log
+
+# # Prisma specific
+# # .prisma/
+
+# # Build output
+# .next/
+# out/
+
+# # Test artifacts
+# coverage/
+# *.test.js
+# *.test.ts
+
+# # Docker-related
+# .dockerignore
+# Dockerfile*
+# docker-compose.yml
+
+# # Local development environment
+# .env
+# .env.local
+# .env.*.local
+
+# # Git files
+# .git/
+# .gitignore
+
+# # IDEs and editors
+# .vscode/
+# .idea/
+
+# # OS generated files
+# .DS_Store
+# Thumbs.db
