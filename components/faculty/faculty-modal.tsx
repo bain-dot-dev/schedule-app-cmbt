@@ -281,7 +281,7 @@ export function FacultyModal({ isOpen, onClose, faculty }: FacultyModalProps) {
                 name="employeeNumber"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Employee number</FormLabel>
+                    <FormLabel>Employee No.</FormLabel>
                     <FormControl>
                       <Input placeholder="Employee number" {...field} />
                     </FormControl>

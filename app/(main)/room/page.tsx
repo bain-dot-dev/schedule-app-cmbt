@@ -243,7 +243,7 @@ export default function RoomPage() {
         </div>
       </div>
 
-      <div className="lg:mx-12 h-auto rounded-lg border bg-zircon-50/60">
+      <div className="h-auto rounded-lg border bg-zircon-50/60">
         {isLoading ? (
           <div className="flex justify-center py-8">Loading rooms...</div>
         ) : (

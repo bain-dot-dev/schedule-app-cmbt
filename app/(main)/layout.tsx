@@ -14,7 +14,7 @@ export default function DashboardLayout({
         <UserProvider>
           <AppSidebar className="no-print" />
           <Toaster />
-          <main className="w-full px-6">
+          <main className="w-full px-4">
             <div className="no-print flex py-5">
               <SidebarTrigger />
             </div>
