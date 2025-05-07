@@ -217,6 +217,17 @@ export async function POST(request: Request) {
     const timeStart = parseTimeString(data.startTime)
     const timeEnd = parseTimeString(data.endTime)
 
+    // Validate that end time is after start time
+    if (timeEnd <= timeStart) {
+      return NextResponse.json(
+        {
+          error: "Invalid time range",
+          details: "End time must be later than start time.",
+        },
+        { status: 400 }
+      )
+    }
+
     // Convert day string to number
     const day = dayToNumber(data.day)
 

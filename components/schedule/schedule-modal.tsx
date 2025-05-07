@@ -396,7 +396,7 @@ export function ScheduleModal({
                             key={`semester-${semester}`}
                             value={semester}
                           >
-                            {semester}
+                            {semester.replace(/_/g, " ")}
                           </SelectItem>
                         ))}
                       </SelectContent>

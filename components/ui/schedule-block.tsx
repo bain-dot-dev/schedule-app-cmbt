@@ -118,7 +118,7 @@ export function ScheduleBlock({
 
       {layoutType === "very-short" && (
         // Super compact layout for very short blocks and mobile
-        <div className="flex flex-row md:flex-1 md:flex-col justify-center gap-2 md:gap-0 print:flex print:flex-1 print:flex-col print:justify-center print:items-center print:p-0 w-full h-full items-center overflow-hidden">
+        <div className="flex flex-row md:flex-1 md:flex-col xl:flex-row justify-center gap-2 md:gap-0 xl:gap-2 print:flex print:flex-1 print:flex-col print:justify-center print:items-center print:p-0 w-full h-full items-center overflow-hidden">
           <div className="flex flex-col items-center justify-center text-center ">
             <div className="font-medium leading-none text-base md:text-[8px] lg:text-[10px] xl:text-[12px] print:text-xs truncate w-full">
               {subject}
