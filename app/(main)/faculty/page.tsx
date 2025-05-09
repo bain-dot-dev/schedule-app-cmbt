@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useContext, useEffect, useCallback } from "react";
 import { Eye, Pencil, Plus, SearchIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -21,6 +21,7 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from "@/components/ui/pagination";
+import { userSessionContext } from "@/components/sessionContext-provider";
 import { FacultyModal } from "@/components/faculty/faculty-modal";
 import { useRouter } from "next/navigation";
 
@@ -66,6 +67,7 @@ export default function FacultyPage() {
     totalPages: 1,
     currentPage: 1,
   });
+  const user = useContext(userSessionContext);
 
   // Fetch rooms data with pagination
   const fetchFacultyList = useCallback(
@@ -233,10 +235,15 @@ export default function FacultyPage() {
     router.push(`/faculty-sched/${faculty.facultyID}`);
   };
 
+  const canAccessButton = () => {
+    if (!user) return false;
+    if (user.isAdmin) return true;
+  };
+
   return (
     <div className="py-8">
       <div className="mb-8 flex flex-col lg:flex-row items-center justify-between">
-        <h1 className="text-[32px] leading-5 font-semibold text-masala-900 pb-8 lg:pb-0">
+        <h1 className=" text-[32px] leading-5 font-semibold text-masala-900 pb-8 lg:pb-0">
           List of faculty
         </h1>
         <div className="flex items-center gap-4">
@@ -249,10 +256,12 @@ export default function FacultyPage() {
               onChange={handleSearch}
             />
           </div>
-          <Button onClick={handleAddFaculty} className="gap-2">
-            <Plus className="h-5 w-5" />
-            Add Faculty
-          </Button>
+          {canAccessButton() && (
+            <Button onClick={handleAddFaculty} className="gap-2">
+              <Plus className="h-5 w-5" />
+              Add Faculty
+            </Button>
+          )}
         </div>
       </div>
 
@@ -271,7 +280,7 @@ export default function FacultyPage() {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Employee no.</TableHead>
+                    {canAccessButton() && <TableHead>Employee no.</TableHead>}
                     <TableHead>Name</TableHead>
                     <TableHead>Department</TableHead>
                     <TableHead>Rank</TableHead>
@@ -281,7 +290,9 @@ export default function FacultyPage() {
                 <TableBody>
                   {filteredFacultyList.map((faculty) => (
                     <TableRow key={faculty.employeeNumber}>
-                      <TableCell>{faculty.employeeNumber}</TableCell>
+                      {canAccessButton() && (
+                        <TableCell>{faculty.employeeNumber}</TableCell>
+                      )}
                       <TableCell>
                         {faculty.firstName}{" "}
                         {faculty.middleName ? faculty.middleName + " " : ""}
@@ -298,13 +309,15 @@ export default function FacultyPage() {
                           >
                             <Eye className="h-4 w-4" />
                           </Button>
-                          <Button
-                            variant="outline"
-                            size="icon"
-                            onClick={() => handleEditFaculty(faculty)}
-                          >
-                            <Pencil className="h-4 w-4" />
-                          </Button>
+                          {canAccessButton() && (
+                            <Button
+                              variant="outline"
+                              size="icon"
+                              onClick={() => handleEditFaculty(faculty)}
+                            >
+                              <Pencil className="h-4 w-4" />
+                            </Button>
+                          )}
                         </div>
                       </TableCell>
                     </TableRow>

@@ -11,6 +11,7 @@ export const userFormSchema = z.object({
       .or(z.literal("")),
     isAdmin: z.boolean().default(false),
     isActive: z.boolean().default(true),
+    courseProgramID: z.string().optional(),
     // sendVerificationEmail: z.boolean().default(true),
     sendVerificationEmail: z.boolean().default(false),
   });

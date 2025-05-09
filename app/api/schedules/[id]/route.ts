@@ -156,7 +156,7 @@ export async function GET(
         { status: 404 }
       );
     }
-
+    
     return NextResponse.json(transformSchedule(schedule));
   } catch (error) {
     console.error("Error fetching schedule:", error);
@@ -282,6 +282,7 @@ export async function PUT(
     const roomConflicts = await prisma.schedule.findMany({
       where: {
         roomID: data.room,
+        sectionCourseID: data.sectionCourse,
         ...timeConflictCondition,
       },
       include: {

@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { PrismaClient } from "@prisma/client";
+import { getIronSession } from "iron-session";
+import { SessionData, sessionOptions } from "@/lib/session";
 
 const prisma = new PrismaClient();
 
@@ -45,23 +47,33 @@ const prisma = new PrismaClient();
 //   }
 // }
 
-export async function GET(request: NextRequest) {
+export async function GET(request: NextRequest, response: NextResponse) {
   try {
+    const session = await getIronSession<SessionData>(
+      request,
+      response,
+      sessionOptions
+    );
+
     // Get pagination parameters from the URL
-    const searchParams = request.nextUrl.searchParams
-    const page = Number.parseInt(searchParams.get("page") || "1")
-    const limit = Number.parseInt(searchParams.get("limit") || "10")
+    const searchParams = request.nextUrl.searchParams;
+    const page = Number.parseInt(searchParams.get("page") || "1");
+    const limit = Number.parseInt(searchParams.get("limit") || "10");
 
     // Calculate skip value for pagination
-    const skip = (page - 1) * limit
+    const skip = (page - 1) * limit;
 
     // Get total count for pagination metadata
-    const totalItems = await prisma.sectionCourse.count()
+    const totalItems = await prisma.sectionCourse.count();
 
     // Get paginated data with relations
     const sections = await prisma.sectionCourse.findMany({
       skip,
       take: limit,
+      where: {
+        // Add any filtering logic here if needed
+        courseProgramID: session.courseProgramID,
+      },
       include: {
         section: true,
         courseProgram: true,
@@ -71,10 +83,10 @@ export async function GET(request: NextRequest) {
           sectionName: "asc",
         },
       },
-    })
+    });
 
     // Calculate pagination metadata
-    const totalPages = Math.ceil(totalItems / limit)
+    const totalPages = Math.ceil(totalItems / limit);
 
     // Return paginated response
     return NextResponse.json({
@@ -85,10 +97,13 @@ export async function GET(request: NextRequest) {
         totalPages,
         currentPage: page,
       },
-    })
+    });
   } catch (error) {
-    console.error("Error fetching sections:", error)
-    return NextResponse.json({ error: "Failed to fetch sections" }, { status: 500 })
+    console.error("Error fetching sections:", error);
+    return NextResponse.json(
+      { error: "Failed to fetch sections" },
+      { status: 500 }
+    );
   }
 }
 

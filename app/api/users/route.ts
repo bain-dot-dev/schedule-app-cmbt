@@ -20,18 +20,19 @@ export async function GET(request: NextRequest) {
     const totalItems = await prisma.user.count();
 
     const users = await prisma.user.findMany({
-        skip,
-        take: limit,
+      skip,
+      take: limit,
       include: {
         emails: true,
+        courseProgram: true,
       },
       orderBy: {
         lastName: "asc",
       },
     });
 
-        // Calculate pagination metadata
-        const totalPages = Math.ceil(totalItems / limit);
+    // Calculate pagination metadata
+    const totalPages = Math.ceil(totalItems / limit);
 
     // Transform the data to include all necessary information
     const formattedUsers = users.map((user) => ({
@@ -42,16 +43,19 @@ export async function GET(request: NextRequest) {
       email: user.emails?.email || "",
       isAdmin: user.isAdmin,
       isActive: user.isActive,
+      courseProgramID: user.courseProgram?.courseProgramID,
+      courseProgram: user.courseProgram?.courseProgram,
+      courseCode: user.courseProgram?.courseCode,
     }));
 
     return NextResponse.json({
-        data: formattedUsers,
-        meta: {
-            totalItems,
-            itemsPerPage: limit,
-            totalPages,
-            currentPage: page,
-        },
+      data: formattedUsers,
+      meta: {
+        totalItems,
+        itemsPerPage: limit,
+        totalPages,
+        currentPage: page,
+      },
     });
   } catch (error) {
     console.error("Error fetching users:", error);
@@ -99,6 +103,7 @@ export async function POST(request: Request) {
           lastName: data.lastName,
           isAdmin: data.isAdmin || false,
           isActive: data.isActive || true,
+          courseProgramID: data.courseProgramID || null,
         },
       });
 

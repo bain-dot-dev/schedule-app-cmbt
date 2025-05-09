@@ -140,7 +140,7 @@ export function CourseModal({ isOpen, onClose, course }: CourseModalProps) {
             <div className="flex h-10 w-10 items-center justify-center rounded-full border">
               <FileEdit className="h-5 w-5" />
             </div>
-            <div>
+            <div className="flex flex-col items-start">
               <DialogTitle className="text-xl">
                 {isEditMode ? "Edit Course" : "Add Course"}
               </DialogTitle>

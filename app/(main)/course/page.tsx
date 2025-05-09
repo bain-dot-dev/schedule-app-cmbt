@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
-import { Eye, Pencil, Plus, SearchIcon } from "lucide-react";
+import { useState, useContext, useEffect, useCallback } from "react";
+import { Pencil, Plus, SearchIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -21,6 +21,7 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from "@/components/ui/pagination";
+import { userSessionContext } from "@/components/sessionContext-provider";
 import { CourseModal } from "@/components/course/course-modal";
 
 // // Course programs mapping for display
@@ -50,6 +51,7 @@ export default function SectionPage() {
   const [courses, setCourses] = useState<Course[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
+  const user = useContext(userSessionContext);
 
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
@@ -214,10 +216,15 @@ export default function SectionPage() {
     return pageNumbers;
   };
 
+  const canAccessButton = () => {
+    if (!user) return false;
+    if (user.isAdmin) return true;
+  };
+
   return (
     <div className="py-8">
       <div className="mb-8 flex flex-col lg:flex-row items-center justify-between">
-      <h1 className="text-[32px] leading-5 font-semibold text-masala-900 pb-8 lg:pb-0">
+        <h1 className="text-[32px] leading-5 font-semibold text-masala-900 pb-8 lg:pb-0">
           List of course programs
         </h1>
         <div className="flex items-center gap-4">
@@ -230,10 +237,12 @@ export default function SectionPage() {
               onChange={handleSearch}
             />
           </div>
-          <Button className="gap-2" onClick={handleAddCourse}>
-            <Plus className="h-5 w-5" />
-            Add Course
-          </Button>
+          {canAccessButton() && (
+            <Button className="gap-2" onClick={handleAddCourse}>
+              <Plus className="h-5 w-5" />
+              Add Course
+            </Button>
+          )}
         </div>
       </div>
 
@@ -252,7 +261,9 @@ export default function SectionPage() {
                   <TableRow>
                     <TableHead>Course Code</TableHead>
                     <TableHead>Course Program</TableHead>
-                    <TableHead>Actions</TableHead>
+                    {canAccessButton() && (
+                      <TableHead className="text-center">Actions</TableHead>
+                    )}
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -260,20 +271,19 @@ export default function SectionPage() {
                     <TableRow key={course.courseProgramID}>
                       <TableCell>{course.courseCode}</TableCell>
                       <TableCell>{course.courseProgram}</TableCell>
-                      <TableCell>
-                        <div className="flex justify-center gap-2">
-                          <Button variant="outline" size="icon">
-                            <Eye className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            variant="outline"
-                            size="icon"
-                            onClick={() => handleEditCourse(course)}
-                          >
-                            <Pencil className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      </TableCell>
+                      {canAccessButton() && (
+                        <TableCell>
+                          <div className="flex justify-center gap-2">
+                            <Button
+                              variant="outline"
+                              size="icon"
+                              onClick={() => handleEditCourse(course)}
+                            >
+                              <Pencil className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      )}
                     </TableRow>
                   ))}
                 </TableBody>

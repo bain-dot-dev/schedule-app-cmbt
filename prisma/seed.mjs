@@ -10,6 +10,13 @@ async function main() {
   const regularUserAdmin = "test@gmail.com";
   const regularUserHashedPassword = await bcrypt.hash("test123", 10);
 
+  const createCourse = await prisma.courseProgram.create({
+    data: {
+      courseCode: "BSHM",
+      courseProgram: "Bachelor of Science in Hospitality Management",
+    },
+  });
+
   const createUserAdmin = await prisma.user.create({
     data: {
       firstName: "John",
@@ -17,6 +24,7 @@ async function main() {
       lastName: "Doe",
       isAdmin: true,
       isActive: true,
+      courseProgramID: createCourse.courseProgramID,
     },
   });
 
@@ -41,6 +49,7 @@ async function main() {
       lastName: "Doe",
       isAdmin: false,
       isActive: true,
+      courseProgramID: createCourse.courseProgramID,
     },
   });
 

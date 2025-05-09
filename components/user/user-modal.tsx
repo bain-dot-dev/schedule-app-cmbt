@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { UserPlus } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -24,6 +24,13 @@ import {
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { userFormSchema, UserFormValues } from "@/schemas/userForm.schema";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "../ui/select";
 
 interface UserModalProps {
   isOpen: boolean;
@@ -36,12 +43,40 @@ interface UserModalProps {
     email: string;
     isAdmin: boolean;
     isActive: boolean;
+    courseProgramID?: string;
   } | null;
+}
+
+interface Course {
+  courseProgramID: string;
+  courseCode: string;
+  courseProgram: string;
 }
 
 export function UserModal({ isOpen, onClose, user }: UserModalProps) {
   const isEditMode = !!user?.userID;
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [courses, setCourses] = useState<Course[]>([]);
+
+  // Fetch courses data
+  const fetchCourses = useCallback(async () => {
+    try {
+      const response = await fetch("/api/course-list");
+      if (!response.ok) {
+        throw new Error("Failed to fetch courses");
+      }
+      const data = await response.json();
+      setCourses(data);
+    } catch (error) {
+      console.error("Error fetching courses:", error);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (isOpen) {
+      fetchCourses();
+    }
+  }, [fetchCourses, isOpen]);
 
   // Initialize the form with react-hook-form
   const form = useForm<UserFormValues>({
@@ -54,6 +89,7 @@ export function UserModal({ isOpen, onClose, user }: UserModalProps) {
       password: "",
       isAdmin: false,
       isActive: true,
+      courseProgramID: "",
       // sendVerificationEmail: true,
       sendVerificationEmail: false,
     },
@@ -67,6 +103,12 @@ export function UserModal({ isOpen, onClose, user }: UserModalProps) {
   // Update form values when user data changes (for edit mode)
   useEffect(() => {
     if (user) {
+      const courseProgramID =
+        user.courseProgramID ||
+        courses.find((c) => c.courseProgramID === user.courseProgramID)
+          ?.courseProgramID ||
+        "";
+
       form.reset({
         firstName: user.firstName || "",
         middleName: user.middleName || "",
@@ -75,6 +117,7 @@ export function UserModal({ isOpen, onClose, user }: UserModalProps) {
         password: "", // Don't populate password in edit mode
         isAdmin: user.isAdmin || false,
         isActive: user.isActive || true,
+        courseProgramID: courseProgramID,
         sendVerificationEmail: false, // Default to false in edit mode
       });
     } else {
@@ -86,10 +129,15 @@ export function UserModal({ isOpen, onClose, user }: UserModalProps) {
         password: "",
         isAdmin: false,
         isActive: true,
+        courseProgramID: "",
         sendVerificationEmail: false,
       });
     }
-  }, [user, form]);
+  }, [user, form, courses]);
+
+  useEffect(() => {
+    console.log(form.formState.errors);
+  }, [form.formState.errors]);
 
   // Handle form submission
   const onSubmit = async (data: UserFormValues) => {
@@ -107,6 +155,7 @@ export function UserModal({ isOpen, onClose, user }: UserModalProps) {
 
         if (!response.ok) {
           const errorData = await response.json();
+          console.log("data", data);
           throw new Error(errorData.error || "Failed to update user");
         }
 
@@ -162,7 +211,7 @@ export function UserModal({ isOpen, onClose, user }: UserModalProps) {
             <div className="flex h-10 w-10 items-center justify-center rounded-full border">
               <UserPlus className="h-5 w-5" />
             </div>
-            <div>
+            <div className="flex flex-col items-start">
               <DialogTitle className="text-xl">
                 {isEditMode ? "Edit User" : "Add User"}
               </DialogTitle>
@@ -219,8 +268,39 @@ export function UserModal({ isOpen, onClose, user }: UserModalProps) {
                   )}
                 />
               </div>
+              <FormField
+                control={form.control}
+                name="courseProgramID"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Department</FormLabel>
+                    <Select
+                      onValueChange={field.onChange}
+                      defaultValue={field.value}
+                      value={field.value}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Department" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {courses.map((course) => (
+                          <SelectItem
+                            key={`course-${course.courseProgramID}`}
+                            value={course.courseProgramID}
+                          >
+                            {course.courseProgram}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-              <div className="grid grid-rows-2 lg:grid-cols-2 gap-4">
+              <div className="grid grid-rows-2 lg:grid-rows-1 lg:grid-cols-2 gap-4">
                 <FormField
                   control={form.control}
                   name="email"

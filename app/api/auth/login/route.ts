@@ -101,6 +101,7 @@ export async function POST(req: NextRequest) {
     session.lastname = userData?.lastName;
     session.email = userEmail?.email;
     session.isAdmin = userData?.isAdmin ?? false;
+    session.courseProgramID = userData?.courseProgramID ?? undefined;
     session.isLoggedIn = true;
     await session.save();
 

@@ -19,6 +19,10 @@ export async function GET(
       },
     });
 
+    const courseProgram = await prisma.courseProgram.findUnique({
+      where: { courseProgramID: user?.courseProgramID ?? undefined },
+    });
+
     if (!user) {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
@@ -29,6 +33,7 @@ export async function GET(
       middleName: user.middleName,
       lastName: user.lastName,
       email: user.emails?.email || "",
+      courseProgramID: courseProgram?.courseProgramID,
     });
   } catch (error) {
     console.error("Error fetching user:", error);
@@ -82,6 +87,11 @@ export async function PUT(
       }
     }
 
+    // Check if course program exists
+    // const course = await prisma.courseProgram.findUnique({
+    //   where: { courseProgramID: data.courseProgramID },
+    // });
+
     // Update user with transaction to ensure all related records are updated
     await prisma.$transaction(async (prisma) => {
       // Update user
@@ -93,6 +103,7 @@ export async function PUT(
           lastName: data.lastName,
           isAdmin: data.isAdmin || false,
           isActive: data.isActive || false,
+          courseProgramID: data.courseProgramID || null,
         },
       });
 

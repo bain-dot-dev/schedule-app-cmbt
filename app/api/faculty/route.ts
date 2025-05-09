@@ -1,6 +1,8 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { PrismaClient } from "@prisma/client";
 import { facultyFormSchema } from "@/schemas/faculty.schema";
+import { getIronSession } from "iron-session";
+import { SessionData, sessionOptions } from "@/lib/session";
 
 const prisma = new PrismaClient();
 
@@ -27,8 +29,10 @@ const prisma = new PrismaClient();
 // }
 
 // GET all faculty members with pagination
-export async function GET(req: NextRequest) {
+export async function GET(req: NextRequest, res: NextResponse) {
   try {
+    const session = await getIronSession<SessionData>(req, res, sessionOptions);
+
     const searchParams = req.nextUrl.searchParams;
     const page = Number.parseInt(searchParams.get("page") || "1");
     const limit = Number.parseInt(searchParams.get("limit") || "10");
@@ -40,6 +44,8 @@ export async function GET(req: NextRequest) {
     // Get total count for pagination
     const totalItems = await prisma.faculty.count({
       where: {
+        courseProgramID: session.courseProgramID,
+
         OR: [
           { firstName: { contains: search, mode: "insensitive" } },
           { lastName: { contains: search, mode: "insensitive" } },
@@ -57,6 +63,7 @@ export async function GET(req: NextRequest) {
     // Get paginated faculty data
     const faculty = await prisma.faculty.findMany({
       where: {
+        courseProgramID: session.courseProgramID,
         OR: [
           { firstName: { contains: search, mode: "insensitive" } },
           { lastName: { contains: search, mode: "insensitive" } },

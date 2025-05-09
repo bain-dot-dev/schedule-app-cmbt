@@ -345,7 +345,7 @@ export function ScheduleModal({
             <div className="flex h-10 w-10 items-center justify-center rounded-full border">
               <CalendarClock className="h-5 w-5" />
             </div>
-            <div>
+            <div className="flex flex-col items-start">
               <DialogTitle className="text-xl">
                 {isEditMode ? "Edit Schedule" : "Add Schedule"}
               </DialogTitle>

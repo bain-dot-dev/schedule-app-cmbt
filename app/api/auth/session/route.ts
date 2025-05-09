@@ -25,7 +25,7 @@ import { SessionData, sessionOptions } from "@/lib/session";
 export async function GET(req: NextRequest) {
   // Create a response object to modify
   const res = NextResponse.json({});
-  
+
   // Get the session using both request and response
   const session = await getIronSession<SessionData>(req, res, sessionOptions);
 
@@ -35,7 +35,7 @@ export async function GET(req: NextRequest) {
     console.log("Not authenticated:", session);
     return NextResponse.json({ isLoggedIn: false }, { status: 200 }); // Return 200 with isLoggedIn: false
   }
-  
+
   return NextResponse.json({
     userid: session.userid,
     firstname: session.firstname,
@@ -43,6 +43,7 @@ export async function GET(req: NextRequest) {
     lastname: session.lastname,
     email: session.email,
     isAdmin: session.isAdmin,
-    isLoggedIn: session.isLoggedIn
+    courseProgramID: session.courseProgramID,
+    isLoggedIn: session.isLoggedIn,
   });
 }

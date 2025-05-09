@@ -15,10 +15,12 @@ model User {
   lastName           String             @db.VarChar(25)
   isAdmin            Boolean
   isActive           Boolean
+  courseProgramID   String?
   emails             Email?
   passwords          Password?
   resetTokens        ResetToken?
   verificationTokens VerificationToken?
+  courseProgram     CourseProgram?     @relation(fields: [courseProgramID], references: [courseProgramID])
 }
 
 model Email {
@@ -76,6 +78,7 @@ model CourseProgram {
   courseProgram   String          @unique
   faculties       Faculty[]
   sectionCourses  SectionCourse[]
+  users          User[]
 }
 
 model Section {

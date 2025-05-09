@@ -8,6 +8,7 @@ export interface SessionData {
   email?: string;
   isLoggedIn?: boolean;
   isAdmin?: boolean;
+  courseProgramID?: string;
 }
 
 export const sessionOptions: SessionOptions = {

@@ -32,6 +32,9 @@ interface User {
   email: string;
   isAdmin: boolean;
   isActive: boolean;
+  courseProgramID?: string;
+  courseProgram?: string;
+  courseCode?: string;
 }
 
 interface PaginationMeta {
@@ -142,7 +145,8 @@ export default function UsersPage() {
       (user.middleName &&
         user.middleName.toLowerCase().includes(searchTerm.toLowerCase())) ||
       (user.isAdmin && user.isAdmin.toString().includes(searchTerm)) ||
-      (user.isActive && user.isActive.toString().includes(searchTerm))
+      (user.isActive && user.isActive.toString().includes(searchTerm)) ||
+      (user.courseProgram && user.courseProgram.toString().includes(searchTerm))
   );
 
   // Generate page numbers for pagination
@@ -222,6 +226,7 @@ export default function UsersPage() {
                   <TableRow>
                     <TableHead>Name</TableHead>
                     <TableHead>Email</TableHead>
+                    <TableHead>Department</TableHead>
                     <TableHead>Status</TableHead>
                     <TableHead className="text-center">Role</TableHead>
                     <TableHead className="text-center">Actions</TableHead>
@@ -236,6 +241,7 @@ export default function UsersPage() {
                         {user.lastName}
                       </TableCell>
                       <TableCell>{user.email}</TableCell>
+                      <TableCell>{user.courseCode}</TableCell>
                       <TableCell>
                         <span
                           className={`px-2 py-1 rounded-full text-xs ${

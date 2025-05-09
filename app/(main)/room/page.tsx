@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useContext, useEffect, useCallback } from "react";
 import { Eye, Pencil, Plus, SearchIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -21,6 +21,7 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from "@/components/ui/pagination";
+import { userSessionContext } from "@/components/sessionContext-provider";
 import { RoomModal } from "@/components/room/room-modal";
 import { useRouter } from "next/navigation";
 
@@ -53,6 +54,7 @@ export default function RoomPage() {
     totalPages: 1,
     currentPage: 1,
   });
+  const user = useContext(userSessionContext);
 
   // Fetch rooms data with pagination
   const fetchRooms = useCallback(
@@ -211,6 +213,11 @@ export default function RoomPage() {
     router.push(`/room-sched/${room.roomID}`);
   };
 
+  const canAccessButton = () => {
+    if (!user) return false;
+    if (user.isAdmin) return true;
+  };
+
   return (
     <div className="py-8">
       <div className="mb-8 flex flex-col lg:flex-row items-center justify-between">
@@ -236,10 +243,12 @@ export default function RoomPage() {
               onChange={handleSearch}
             />
           </div>
-          <Button onClick={handleAddRoom} className="gap-2">
-            <Plus className="h-5 w-5" />
-            Add Room
-          </Button>
+          {canAccessButton() && (
+            <Button onClick={handleAddRoom} className="gap-2">
+              <Plus className="h-5 w-5" />
+              Add Room
+            </Button>
+          )}
         </div>
       </div>
 
@@ -258,7 +267,7 @@ export default function RoomPage() {
                   <TableRow>
                     <TableHead>Room Number</TableHead>
                     <TableHead>Type</TableHead>
-                    <TableHead>Actions</TableHead>
+                    {canAccessButton() && <TableHead>Actions</TableHead>}
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -275,13 +284,15 @@ export default function RoomPage() {
                           >
                             <Eye className="h-4 w-4" />
                           </Button>
-                          <Button
-                            variant="outline"
-                            size="icon"
-                            onClick={() => handleEditRoom(room)}
-                          >
-                            <Pencil className="h-4 w-4" />
-                          </Button>
+                          {canAccessButton() && (
+                            <Button
+                              variant="outline"
+                              size="icon"
+                              onClick={() => handleEditRoom(room)}
+                            >
+                              <Pencil className="h-4 w-4" />
+                            </Button>
+                          )}
                         </div>
                       </TableCell>
                     </TableRow>

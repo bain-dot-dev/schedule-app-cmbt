@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
-import { Eye, Pencil, Plus, SearchIcon } from "lucide-react";
+import { useState, useContext, useEffect, useCallback } from "react";
+import { Pencil, Plus, SearchIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -21,6 +21,7 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from "@/components/ui/pagination";
+import { userSessionContext } from "@/components/sessionContext-provider";
 import { SubjectModal } from "@/components/subject/subject-modal";
 
 // Subject names mapping for display
@@ -51,6 +52,7 @@ export default function SectionPage() {
   const [subjects, setSubjects] = useState<Subject[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
+  const user = useContext(userSessionContext);
 
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
@@ -216,6 +218,11 @@ export default function SectionPage() {
     return pageNumbers;
   };
 
+  const canAccessButton = () => {
+    if (!user) return false;
+    if (user.isAdmin) return true;
+  };
+
   return (
     <div className="py-8">
       <div className="mb-8 flex flex-col lg:flex-row items-center justify-between">
@@ -232,10 +239,12 @@ export default function SectionPage() {
               onChange={handleSearch}
             />
           </div>
-          <Button onClick={handleAddSubject} className="gap-2">
-            <Plus className="h-5 w-5" />
-            Add Subject
-          </Button>
+          {canAccessButton() && (
+            <Button onClick={handleAddSubject} className="gap-2">
+              <Plus className="h-5 w-5" />
+              Add Subject
+            </Button>
+          )}
         </div>
       </div>
 
@@ -255,7 +264,7 @@ export default function SectionPage() {
                     <TableHead>subject Name</TableHead>
                     <TableHead>subject Code</TableHead>
                     <TableHead>No. Of Units</TableHead>
-                    <TableHead>Actions</TableHead>
+                    {canAccessButton() && <TableHead>Actions</TableHead>}
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -264,20 +273,19 @@ export default function SectionPage() {
                       <TableCell>{subject.subjectName}</TableCell>
                       <TableCell>{subject.subjectCode}</TableCell>
                       <TableCell>{subject.numberOfUnits}</TableCell>
-                      <TableCell>
-                        <div className="flex justify-center gap-2">
-                          <Button variant="outline" size="icon">
-                            <Eye className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            variant="outline"
-                            size="icon"
-                            onClick={() => handleEditSubject(subject)}
-                          >
-                            <Pencil className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      </TableCell>
+                      {canAccessButton() && (
+                        <TableCell>
+                          <div className="flex justify-center gap-2">
+                            <Button
+                              variant="outline"
+                              size="icon"
+                              onClick={() => handleEditSubject(subject)}
+                            >
+                              <Pencil className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      )}
                     </TableRow>
                   ))}
                 </TableBody>

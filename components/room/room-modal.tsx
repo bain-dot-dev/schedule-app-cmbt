@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { House } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
@@ -138,23 +139,9 @@ export function RoomModal({ isOpen, onClose, room }: RoomModalProps) {
         <DialogHeader className="flex flex-row items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-full border">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="24"
-                height="24"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                className="lucide lucide-home"
-              >
-                <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
-                <polyline points="9 22 9 12 15 12 15 22" />
-              </svg>
+            <House className="h-5 w-5" />
             </div>
-            <div>
+            <div className="flex flex-col items-start">
               <DialogTitle className="text-xl">
                 {isEditMode ? "Edit Room" : "Add Room"}
               </DialogTitle>
