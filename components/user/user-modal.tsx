@@ -220,7 +220,7 @@ export function UserModal({ isOpen, onClose, user }: UserModalProps) {
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-rows-2 lg:grid-cols-2 gap-4">
                 <FormField
                   control={form.control}
                   name="email"
