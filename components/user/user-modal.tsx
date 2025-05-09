@@ -41,7 +41,7 @@ interface UserModalProps {
     middleName?: string;
     lastName: string;
     email: string;
-    isAdmin: boolean;
+    role: string;
     isActive: boolean;
     courseProgramID?: string;
   } | null;
@@ -87,7 +87,7 @@ export function UserModal({ isOpen, onClose, user }: UserModalProps) {
       lastName: "",
       email: "",
       password: "",
-      isAdmin: false,
+      role: "faculty",
       isActive: true,
       courseProgramID: "",
       // sendVerificationEmail: true,
@@ -115,7 +115,9 @@ export function UserModal({ isOpen, onClose, user }: UserModalProps) {
         lastName: user.lastName || "",
         email: user.email || "",
         password: "", // Don't populate password in edit mode
-        isAdmin: user.isAdmin || false,
+        role: ["superadmin", "admin", "faculty"].includes(user.role)
+          ? (user.role as "superadmin" | "admin" | "faculty")
+          : undefined,
         isActive: user.isActive || true,
         courseProgramID: courseProgramID,
         sendVerificationEmail: false, // Default to false in edit mode
@@ -127,7 +129,7 @@ export function UserModal({ isOpen, onClose, user }: UserModalProps) {
         lastName: "",
         email: "",
         password: "",
-        isAdmin: false,
+        role: "faculty",
         isActive: true,
         courseProgramID: "",
         sendVerificationEmail: false,
@@ -268,38 +270,68 @@ export function UserModal({ isOpen, onClose, user }: UserModalProps) {
                   )}
                 />
               </div>
-              <FormField
-                control={form.control}
-                name="courseProgramID"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Department</FormLabel>
-                    <Select
-                      onValueChange={field.onChange}
-                      defaultValue={field.value}
-                      value={field.value}
-                    >
+              <div className="grid grid-rows-2 lg:grid-rows-1 lg:grid-cols-2 gap-4">
+                <FormField
+                  control={form.control}
+                  name="courseProgramID"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Department</FormLabel>
+                      <Select
+                        onValueChange={field.onChange}
+                        defaultValue={field.value}
+                        value={field.value}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Department" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {courses.map((course) => (
+                            <SelectItem
+                              key={`course-${course.courseProgramID}`}
+                              value={course.courseProgramID}
+                            >
+                              {course.courseProgram}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="role"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Role</FormLabel>
                       <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Department" />
-                        </SelectTrigger>
+                        <Select
+                          onValueChange={field.onChange}
+                          defaultValue={field.value}
+                          value={field.value}
+                        >
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Role" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="superadmin">
+                              Super Admin
+                            </SelectItem>
+                            <SelectItem value="admin">Admin</SelectItem>
+                            <SelectItem value="faculty">Faculty</SelectItem>
+                          </SelectContent>
+                        </Select>
                       </FormControl>
-                      <SelectContent>
-                        {courses.map((course) => (
-                          <SelectItem
-                            key={`course-${course.courseProgramID}`}
-                            value={course.courseProgramID}
-                          >
-                            {course.courseProgram}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
+                    </FormItem>
+                  )}
+                />
+              </div>
               <div className="grid grid-rows-2 lg:grid-rows-1 lg:grid-cols-2 gap-4">
                 <FormField
                   control={form.control}
@@ -341,27 +373,7 @@ export function UserModal({ isOpen, onClose, user }: UserModalProps) {
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
-              <FormField
-                control={form.control}
-                name="isAdmin"
-                render={({ field }) => (
-                  <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
-                    <FormControl>
-                      <Checkbox
-                        checked={field.value}
-                        onCheckedChange={field.onChange}
-                      />
-                    </FormControl>
-                    <div className="space-y-1 leading-none">
-                      <FormLabel>Administrator</FormLabel>
-                      <p className="text-sm text-muted-foreground">
-                        Grant this user admin privileges.
-                      </p>
-                    </div>
-                  </FormItem>
-                )}
-              />
+            <div className="grid grid-cols-1 gap-4">
               <FormField
                 control={form.control}
                 name="isActive"

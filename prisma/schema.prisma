@@ -13,7 +13,7 @@ model User {
   firstName          String             @db.VarChar(25)
   middleName         String?            @db.VarChar(25)
   lastName           String             @db.VarChar(25)
-  isAdmin            Boolean
+  role             Role
   isActive           Boolean
   courseProgramID   String?
   emails             Email?
@@ -131,4 +131,10 @@ model AcademicYear {
 enum SemesterEnum {
   First_Semester
   Second_Semester
+}
+
+enum Role {
+  superadmin
+  admin
+  faculty
 }

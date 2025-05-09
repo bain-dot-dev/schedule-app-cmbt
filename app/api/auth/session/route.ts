@@ -42,7 +42,7 @@ export async function GET(req: NextRequest) {
     middlename: session.middlename,
     lastname: session.lastname,
     email: session.email,
-    isAdmin: session.isAdmin,
+    role: session.role,
     courseProgramID: session.courseProgramID,
     isLoggedIn: session.isLoggedIn,
   });

@@ -218,7 +218,9 @@ export default function SectionPage() {
 
   const canAccessButton = () => {
     if (!user) return false;
-    if (user.isAdmin) return true;
+    if (user.role === "admin") return true;
+    if (user.role === "superadmin") return true;
+    if (user.role === "faculty") return false;
   };
 
   return (

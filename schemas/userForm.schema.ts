@@ -9,7 +9,9 @@ export const userFormSchema = z.object({
       .string()
       .min(8, { message: "Password must be at least 8 characters" })
       .or(z.literal("")),
-    isAdmin: z.boolean().default(false),
+   role: z.enum(["superadmin", "admin", "faculty"], {
+      errorMap: () => ({ message: "Role is required" }),
+    }),
     isActive: z.boolean().default(true),
     courseProgramID: z.string().optional(),
     // sendVerificationEmail: z.boolean().default(true),

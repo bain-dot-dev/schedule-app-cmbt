@@ -5,7 +5,7 @@ export interface User {
     lastname: string;
     email: string;
     isLoggedIn?: boolean;
-    isAdmin?: boolean;
+    role?: string;
     courseProgramID?: string;
   }
   

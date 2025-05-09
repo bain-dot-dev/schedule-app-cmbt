@@ -30,7 +30,7 @@ interface User {
   middleName?: string;
   lastName: string;
   email: string;
-  isAdmin: boolean;
+  role: string;
   isActive: boolean;
   courseProgramID?: string;
   courseProgram?: string;
@@ -43,6 +43,12 @@ interface PaginationMeta {
   totalPages: number;
   currentPage: number;
 }
+
+const roleLabels: Record<string, string> = {
+  superadmin: "Super Admin",
+  admin: "Admin",
+  faculty: "Faculty",
+};
 
 export default function UsersPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -144,7 +150,7 @@ export default function UsersPage() {
       user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
       (user.middleName &&
         user.middleName.toLowerCase().includes(searchTerm.toLowerCase())) ||
-      (user.isAdmin && user.isAdmin.toString().includes(searchTerm)) ||
+      (user.role && user.role.toString().includes(searchTerm)) ||
       (user.isActive && user.isActive.toString().includes(searchTerm)) ||
       (user.courseProgram && user.courseProgram.toString().includes(searchTerm))
   );
@@ -254,7 +260,19 @@ export default function UsersPage() {
                         </span>
                       </TableCell>
                       <TableCell className="text-center">
-                        {user.isAdmin ? "Admin" : "User"}
+                        {user.role === "superadmin" ? (
+                          <span className="px-2 py-1 rounded-full text-xs bg-fuchsia-100 text-fuchsia-700 font-semibold">
+                            {roleLabels[user.role] || user.role}
+                          </span>
+                        ) : user.role === "admin" ? (
+                          <span className="px-2 py-1 rounded-full text-xs bg-cyan-100 text-cyan-700 font-semibold">
+                            {roleLabels[user.role] || user.role}
+                          </span>
+                        ) : (
+                          <span className="px-2 py-1 rounded-full text-xs bg-yellow-100 text-amber-800 font-semibold">
+                            {roleLabels[user.role] || user.role}
+                          </span>
+                        )}
                       </TableCell>
                       <TableCell>
                         <div className="flex justify-center gap-2">

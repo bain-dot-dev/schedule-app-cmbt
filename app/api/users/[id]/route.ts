@@ -101,7 +101,7 @@ export async function PUT(
           firstName: data.firstName,
           middleName: data.middleName,
           lastName: data.lastName,
-          isAdmin: data.isAdmin || false,
+          role: data.role,
           isActive: data.isActive || false,
           courseProgramID: data.courseProgramID || null,
         },

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useContext } from "react";
 import {
   GraduationCap,
   Home,
@@ -20,6 +20,7 @@ import {
 import { NavMain } from "./nav-main";
 import { NavUser } from "./nav-user";
 import { usePathname } from "next/navigation";
+import { userSessionContext } from "@/components/sessionContext-provider";
 
 // const data = {
 //   menuItems: [
@@ -54,56 +55,47 @@ import { usePathname } from "next/navigation";
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const currentPath = usePathname();
+  const user = useContext(userSessionContext);
+  const { role } = user;
 
-  const [isAdmin, setIsAdmin] = useState(false)
-
-  // Fetch the user's session data when the component mounts
-  useEffect(() => {
-    const checkAdminStatus = async () => {
-      try {
-        const response = await fetch("/api/auth/session")
-        if (response.ok) {
-          const userData = await response.json()
-          setIsAdmin(userData.isAdmin === true)
-        }
-      } catch (error) {
-        console.error("Error fetching user data:", error)
-      }
-    }
-
-    checkAdminStatus()
-  }, [])
-
-    // Filter menu items based on admin status
-    const menuItems = [
-      {
-        title: "Faculty",
-        url: "/faculty",
-        icon: Users2,
-      },
-      {
-        title: "Rooms",
-        url: "/room",
-        icon: Home,
-      },
-      {
-        title: "Sections",
-        url: "/section",
-        icon: LayoutGrid,
-      },
-      {
-        title: "Subjects",
-        url: "/subject",
-        icon: BookOpen,
-      },
-      {
-        title: "Courses",
-        url: "/course",
-        icon: GraduationCap,
-      },
-      // Only include Users menu item if user is admin
-      ...(isAdmin ? [{ title: "Users", url: "/users", icon: UserRound }] : []),
-    ]
+  // Filter menu items based on admin status
+  const menuItems = [
+    {
+      title: "Faculty",
+      url: "/faculty",
+      icon: Users2,
+    },
+    {
+      title: "Rooms",
+      url: "/room",
+      icon: Home,
+    },
+    {
+      title: "Sections",
+      url: "/section",
+      icon: LayoutGrid,
+    },
+    {
+      title: "Subjects",
+      url: "/subject",
+      icon: BookOpen,
+    },
+    {
+      title: "Courses",
+      url: "/course",
+      icon: GraduationCap,
+    },
+    // Only include Users menu item if user is admin
+    ...(role === "admin" || role === "superadmin"
+      ? [
+          {
+            title: "Users",
+            url: "/users",
+            icon: UserRound,
+          },
+        ]
+      : []),
+  ];
 
   return (
     <Sidebar collapsible="icon" {...props}>

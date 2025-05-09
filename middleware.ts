@@ -24,7 +24,10 @@ export async function middleware(request: NextRequest) {
   }
 
   // If the route is /users (admin-only) and the user is not an admin
-  if (pathname.startsWith("/users") && !session.isAdmin) {
+  if (
+    pathname.startsWith("/users") &&
+    !(session.role === "admin" || session.role === "superadmin")
+  ) {
     const url = request.nextUrl.clone();
     url.pathname = "/";
     return NextResponse.redirect(url);
@@ -44,6 +47,6 @@ export const config = {
     "/faculty-sched/:path*",
     "/room-sched/:path*",
     "/section-sched/:path*",
-    "/users/:path*", // admin-only path
+    "/users/:path*",
   ],
 };

@@ -10,7 +10,7 @@ const defaultUser: User = {
   lastname: "",
   email: "",
   isLoggedIn: false,
-  isAdmin: false,
+  role: "",
   courseProgramID: "",
 };
 
